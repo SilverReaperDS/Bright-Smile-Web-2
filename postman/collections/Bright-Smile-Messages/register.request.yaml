@@ -1,0 +1,17 @@
+$kind: http-request
+name: Register User
+method: POST
+url: 'http://localhost:5000/register'
+order: 1000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "username": "newuser",
+      "email": "newuser@example.com",
+      "password": "yourpassword",
+      "role": "patient"
+    }
