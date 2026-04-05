@@ -1,0 +1,13 @@
+{
+  "name": "bright-smile-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Bright Smile — frontend (React), backend (Express), database (PostgreSQL)",
+  "scripts": {
+    "install:all": "npm install --prefix frontend && npm install --prefix backend",
+    "start:frontend": "npm start --prefix frontend",
+    "start:backend": "npm start --prefix backend",
+    "build:frontend": "npm run build --prefix frontend",
+    "seed:admin": "npm run seed:admin --prefix backend"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "bright-smile-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed:admin": "node scripts/seedAdmin.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.0",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.13.1"
+  }
+}
