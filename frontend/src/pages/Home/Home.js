@@ -47,7 +47,7 @@ export default function Home() {
         </Typography>
         <Button
           component={RouterLink}
-          to="/contact"
+          to="/book-appointment"
           variant="contained"
           sx={{
             backgroundColor: '#0db1ad',
@@ -74,7 +74,7 @@ export default function Home() {
             <Grid item key={s.id} xs={12} sm={6} md={4}>
               <Box
                 component={RouterLink}
-                to={`/services/${s.id}`}
+                to={s.link || '/'}
                 sx={{
                   textDecoration: 'none',
                   color: 'inherit',

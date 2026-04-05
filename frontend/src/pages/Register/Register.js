@@ -14,7 +14,7 @@ import { postRegister } from '../../services/api';
 import styles from './register.styles';
 
 export default function Register() {
-  const [form, setForm] = useState({ username: '', email: '', password: '' });
+  const [form, setForm] = useState({ username: '', email: '', phone: '', password: '' });
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
@@ -74,6 +74,18 @@ export default function Register() {
               value={form.email}
               onChange={handleChange}
               required
+              sx={styles.input}
+            />
+            <TextField
+              label="Phone number"
+              name="phone"
+              type="tel"
+              variant="outlined"
+              fullWidth
+              value={form.phone}
+              onChange={handleChange}
+              required
+              helperText="Required — at least 7 digits"
               sx={styles.input}
             />
             <TextField

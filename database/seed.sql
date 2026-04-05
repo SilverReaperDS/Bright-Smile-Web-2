@@ -29,3 +29,9 @@ INSERT INTO testimonials (author_name, text, rating, status) VALUES
   ('Fuad F.', 'Highly recommend to anyone needing dental implants.', 4, 'approved'),
   ('Saeed A.', 'I am very satisfied with my dental implants.', 3, 'approved'),
   ('Laila K.', 'Great service and friendly atmosphere.', 4, 'approved');
+
+-- Demo appointments (no patient user — admin dashboard still useful)
+INSERT INTO appointments (appointment_date, status, notes) VALUES
+  (date_trunc('day', now()) + interval '10 hours', 'pending', 'Consultation — demo'),
+  (date_trunc('day', now()) + interval '1 day' + interval '14 hours', 'confirmed', 'Follow-up — demo'),
+  (date_trunc('day', now()) + interval '3 days' + interval '9 hours', 'pending', 'Cleaning — demo');

@@ -18,8 +18,9 @@ async function seed() {
 
   const hashedPassword = bcrypt.hashSync(ADMIN_PASSWORD, 10);
   await pool.query(
-    'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4)',
-    [ADMIN_USERNAME, ADMIN_EMAIL, hashedPassword, 'admin']
+    `INSERT INTO users (username, email, phone, password_hash, role)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [ADMIN_USERNAME, ADMIN_EMAIL, '000-000-0000', hashedPassword, 'admin']
   );
 
   console.log('Admin user created successfully.');

@@ -10,6 +10,7 @@ CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   username VARCHAR(255) NOT NULL UNIQUE,
   email VARCHAR(255) NOT NULL UNIQUE,
+  phone VARCHAR(50) NOT NULL DEFAULT '',
   password_hash VARCHAR(255) NOT NULL,
   role VARCHAR(50) NOT NULL DEFAULT 'patient'
     CHECK (role IN ('patient', 'staff', 'admin')),
@@ -22,6 +23,7 @@ CREATE INDEX idx_users_username ON users (lower(username));
 CREATE TABLE appointments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users (id) ON DELETE SET NULL,
+  assigned_staff_id UUID REFERENCES users (id) ON DELETE SET NULL,
   appointment_date TIMESTAMPTZ NOT NULL,
   status VARCHAR(50) NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'confirmed', 'canceled')),
@@ -30,6 +32,7 @@ CREATE TABLE appointments (
 );
 
 CREATE INDEX idx_appointments_user_id ON appointments (user_id);
+CREATE INDEX idx_appointments_assigned_staff ON appointments (assigned_staff_id);
 CREATE INDEX idx_appointments_date ON appointments (appointment_date);
 
 -- ---------------------------------------------------------------------------
@@ -52,6 +55,7 @@ CREATE TABLE messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(255),
   email VARCHAR(255),
+  phone VARCHAR(50),
   message TEXT,
   read BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()

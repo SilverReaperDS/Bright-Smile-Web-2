@@ -3,13 +3,17 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { Box, CircularProgress } from '@mui/material';
 import { getMe } from '../services/api';
 
-export default function PrivateRoute({ children }) {
+export default function PatientPortalRoute({ children }) {
   const location = useLocation();
   const [status, setStatus] = useState('checking');
 
   useEffect(() => {
     getMe()
-      .then(() => {
+      .then((data) => {
+        if (data.role === 'admin') {
+          setStatus('admin');
+          return;
+        }
         setStatus('ok');
       })
       .catch(() => {
@@ -17,7 +21,7 @@ export default function PrivateRoute({ children }) {
         localStorage.removeItem('username');
         setStatus('denied');
       });
-  }, []);
+  }, [location.pathname]);
 
   if (status === 'checking') {
     return (
@@ -29,6 +33,10 @@ export default function PrivateRoute({ children }) {
 
   if (status === 'denied') {
     return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  if (status === 'admin') {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;
