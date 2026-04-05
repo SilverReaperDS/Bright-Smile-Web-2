@@ -18,6 +18,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import styles from './header.styles';
+import { getMe } from '../../services/api';
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -35,8 +36,17 @@ export default function Header() {
 
   useEffect(() => {
     setMenuOpen(false);
-    const storedUser = localStorage.getItem('username');
-    setUsername(storedUser);
+    const fetchUser = async () => {
+      try {
+        const data = await getMe();
+        setUsername(data.username);
+      } catch {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('username');
+        setUsername(null);
+      }
+    };
+    fetchUser();
   }, [location.pathname]);
 
   const isActive = (path) => location.pathname === path;

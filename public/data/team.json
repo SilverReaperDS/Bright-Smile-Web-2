@@ -2,33 +2,36 @@
   {
     "id": 1,
     "name": "Saed Aghbar",
-    "role": "Team Leader / Frontend Developer",
-    "bio": "Lead on project coordination, PR reviews, and the Home Page, Contact us page.",
+    "role": "Backend Developer",
     "photo": "/assets/team/saed.jpg",
     "studentId": "12429711"
   },
   {
     "id": 2,
     "name": "Ayoub Aghbar",
-    "role": "Frontend Developer",
-    "bio": "Responsible for Testimonials and Dental Implants pages and shared components.",
+    "role": "Full Stack Developer",
     "photo": "/assets/team/ayoub.jpg",
     "studentId": "12428124"
   },
   {
     "id": 3,
     "name": "Eyas Marshoud",
-    "role": "Frontend Developer",
-    "bio": "Responsible for Invisalign Treatment page, and Cosmetic Dentistry page.",
+    "role": "Backend Developer",
     "photo": "/assets/team/eyas.jpg",
     "studentId": "12428791"
   },
   {
     "id": 4,
     "name": "Nsralla Dabeek",
-    "role": "Frontend Developer",
-    "bio": "Responsible for About Us and Smile Gallery pages; handles team content and gallery assets.",
+    "role": "Backend Developer",
     "photo": "/assets/team/nsralla.jpg",
     "studentId": "12428610"
+  },
+  {
+    "id": 5,
+    "name": "Khaled Saqir",
+    "role": "Backend Developer",
+    "photo": "/assets/team/khaled.jpg",
+    "studentId": "12326115"
   }
 ]

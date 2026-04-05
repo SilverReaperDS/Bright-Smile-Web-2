@@ -22,9 +22,21 @@ export default function Register() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const validatePassword = (password) => {
+    if (password.length < 8) return 'Password must be at least 8 characters';
+    if (!/[0-9]/.test(password)) return 'Password must include at least one number';
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return 'Password must include at least one special character';
+    return null;
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
     setError(null);
+    const passwordError = validatePassword(form.password);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
     try {
       await postRegister(form);
       alert(`Welcome, ${form.username}!`);
@@ -73,6 +85,7 @@ export default function Register() {
               value={form.password}
               onChange={handleChange}
               required
+              helperText="Min 8 characters, include a number and special character"
               sx={styles.input}
             />
 
