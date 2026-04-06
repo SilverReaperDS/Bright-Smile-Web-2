@@ -1,6 +1,6 @@
 // src/pages/Login/Login.js
 import React, { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useNavigate, useLocation, Link as RouterLink } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -10,6 +10,7 @@ import {
   Link,
   Fade,
 } from '@mui/material';
+import PasswordField from '../../components/PasswordField';
 import { postLogin } from '../../services/api';
 import styles from './login.styles';
 
@@ -18,14 +19,15 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || '/';
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError(null);
     try {
-      await postLogin({ username, password });
-      alert(`Welcome, ${username}!`);
-      navigate('/');
+      await postLogin({ username: username.trim(), password });
+      navigate(from, { replace: true });
     } catch (err) {
       setError(err.message);
     }
@@ -49,15 +51,15 @@ export default function Login() {
               required
               sx={styles.input}
             />
-            <TextField
+            <PasswordField
               label="Password"
-              type="password"
               variant="outlined"
               fullWidth
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               sx={styles.input}
+              autoComplete="current-password"
             />
 
             {error && (

@@ -1,30 +1,21 @@
-// src/pages/SmileGallery.js
-import React, { useEffect, useState } from 'react';
+// src/pages/SmileGallery/SmileGallery.js
+import React, { useCallback } from 'react';
 import {
   Box,
   Container,
   Typography,
   CircularProgress,
   Alert,
+  Button,
 } from '@mui/material';
 import GalleryViewer from '../../components/Gallery/GalleryViewer';
+import useFetch from '../../hooks/useFetch';
+import { getGallery } from '../../services/api';
 import styles from './smileGallery.styles';
 
 export default function SmileGallery() {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    fetch('/data/gallery.json')
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to load gallery');
-        return res.json();
-      })
-      .then(setData)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
+  const fetcher = useCallback((opts) => getGallery(opts), []);
+  const { data, loading, error, refetch } = useFetch(fetcher, [fetcher]);
 
   return (
     <Box sx={styles.section}>
@@ -40,12 +31,25 @@ export default function SmileGallery() {
         )}
 
         {error && (
-          <Alert severity="error" sx={styles.errorBox}>
-            {error}
+          <Alert
+            severity="error"
+            sx={styles.errorBox}
+            action={
+              <Button color="inherit" size="small" onClick={refetch}>
+                Retry
+              </Button>
+            }
+          >
+            {error.message || String(error)}
           </Alert>
         )}
 
-        {!loading && !error && <GalleryViewer items={data} />}
+        {!loading && !error && data?.length > 0 && <GalleryViewer cases={data} />}
+        {!loading && !error && (!data || data.length === 0) && (
+          <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+            No smile cases to show yet.
+          </Typography>
+        )}
       </Container>
     </Box>
   );

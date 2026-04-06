@@ -1,26 +1,47 @@
-// src/components/GalleryViewer.js
 import React from 'react';
 import './gallery.css';
 
-export default function GalleryViewer({ items }) {
-  const rows = [];
-  for (let i = 0; i < items.length; i += 2) {
-    rows.push(items.slice(i, i + 2));
-  }
+function CaseCard({ c }) {
+  const hasAfter = Boolean(c.afterImage);
 
+  return (
+    <article className="gallery-case">
+      <div className={`gallery-case-pair ${hasAfter ? 'gallery-case-pair--two' : 'gallery-case-pair--one'}`}>
+        <div className="gallery-case-panel">
+          <span className="gallery-case-label">Before</span>
+          <div className="gallery-case-image-wrap">
+            <img src={c.beforeImage} alt={`${c.title || 'Case'} — before`} />
+          </div>
+        </div>
+        {hasAfter && (
+          <div className="gallery-case-panel">
+            <span className="gallery-case-label">After</span>
+            <div className="gallery-case-image-wrap">
+              <img src={c.afterImage} alt={`${c.title || 'Case'} — after`} />
+            </div>
+          </div>
+        )}
+      </div>
+      {(c.title || c.description || c.category) && (
+        <div className="gallery-case-meta">
+          {c.title && <h3 className="gallery-case-title">{c.title}</h3>}
+          {c.category && <span className="gallery-case-category">{c.category}</span>}
+          {c.description && <p className="gallery-case-desc">{c.description}</p>}
+        </div>
+      )}
+    </article>
+  );
+}
+
+export default function GalleryViewer({ cases = [] }) {
+  if (!cases.length) return null;
   return (
     <section className="gallery-section">
       <h2>Smile Transformations</h2>
-      <div className="gallery-rows">
-        {rows.map((pair, index) => (
-          <div key={index} className="gallery-row">
-            {pair.map((item, i) => (
-              <div key={i} className="gallery-item">
-                <img src={item.image} alt={item.caption || `Smile ${index * 2 + i + 1}`} />
-                {item.caption && <p className="caption">{item.caption}</p>}
-              </div>
-            ))}
-          </div>
+      <p className="gallery-section-lead">Before and after photos are shown side by side for each smile transformation.</p>
+      <div className="gallery-cases">
+        {cases.map((c) => (
+          <CaseCard key={c.id} c={c} />
         ))}
       </div>
     </section>

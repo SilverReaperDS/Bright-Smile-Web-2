@@ -8,7 +8,7 @@ const links = [
   { label: 'Testimonials', path: '/dashboard/testimonials' },
   { label: 'Gallery', path: '/dashboard/gallery' },
   { label: 'Appointments', path: '/dashboard/appointments' },
-  { label: 'Users', path: '/dashboard/users' },
+  { label: 'Users & staff', path: '/dashboard/users' },
 ];
 
 export default function DashboardSidebar() {

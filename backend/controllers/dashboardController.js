@@ -6,7 +6,9 @@ async function getOverviewStats(req, res) {
       pool.query('SELECT COUNT(*)::int AS c FROM users'),
       pool.query('SELECT COUNT(*)::int AS c FROM appointments'),
       pool.query(`SELECT COUNT(*)::int AS c FROM testimonials WHERE status = 'pending'`),
-      pool.query('SELECT COUNT(*)::int AS c FROM messages WHERE read = false'),
+      pool.query(
+        `SELECT COUNT(*)::int AS c FROM messages WHERE sender_role = 'patient' AND NOT read_by_admin`
+      ),
     ]);
 
     res.json({

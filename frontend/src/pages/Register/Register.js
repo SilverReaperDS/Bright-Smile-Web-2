@@ -10,11 +10,12 @@ import {
   Link,
   Fade,
 } from '@mui/material';
+import PasswordField from '../../components/PasswordField';
 import { postRegister } from '../../services/api';
 import styles from './register.styles';
 
 export default function Register() {
-  const [form, setForm] = useState({ username: '', email: '', password: '' });
+  const [form, setForm] = useState({ username: '', email: '', phone: '', password: '' });
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
@@ -77,9 +78,20 @@ export default function Register() {
               sx={styles.input}
             />
             <TextField
+              label="Phone number"
+              name="phone"
+              type="tel"
+              variant="outlined"
+              fullWidth
+              value={form.phone}
+              onChange={handleChange}
+              required
+              helperText="Required — at least 7 digits"
+              sx={styles.input}
+            />
+            <PasswordField
               label="Password"
               name="password"
-              type="password"
               variant="outlined"
               fullWidth
               value={form.password}
@@ -87,6 +99,7 @@ export default function Register() {
               required
               helperText="Min 8 characters, include a number and special character"
               sx={styles.input}
+              autoComplete="new-password"
             />
 
             {error && (

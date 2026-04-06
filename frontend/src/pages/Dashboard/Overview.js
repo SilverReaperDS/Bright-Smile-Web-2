@@ -1,6 +1,7 @@
 // src/pages/Dashboard/Overview.js
 import React, { useEffect, useState } from 'react';
-import { Box, Grid, Paper, Typography } from '@mui/material';
+import { Box, Grid, Paper, Typography, Alert } from '@mui/material';
+import { fetchDashboardOverview } from '../../services/api';
 
 export default function Overview() {
   const [stats, setStats] = useState({
@@ -9,22 +10,16 @@ export default function Overview() {
     testimonialsPending: 0,
     messagesUnread: 0,
   });
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    // Example: fetch stats from backend
-    fetch('/api/dashboard/overview', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setStats(data))
-      .catch(() => {
-        // fallback dummy data if backend not ready
-        setStats({
-          users: 120,
-          appointments: 45,
-          testimonialsPending: 6,
-          messagesUnread: 10,
-        });
+    fetchDashboardOverview()
+      .then((data) => {
+        setStats(data);
+        setError('');
+      })
+      .catch((err) => {
+        setError(err.message || 'Could not load overview');
       });
   }, []);
 
@@ -40,6 +35,11 @@ export default function Overview() {
       <Typography variant="h4" gutterBottom>
         Dashboard Overview
       </Typography>
+      {error && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          {error}. Check that the backend is running and you are logged in as admin.
+        </Alert>
+      )}
       <Grid container spacing={3}>
         {cards.map(({ label, value }) => (
           <Grid item xs={12} sm={6} md={3} key={label}>

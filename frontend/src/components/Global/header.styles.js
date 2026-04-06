@@ -34,8 +34,19 @@ const styles = {
   authBox: {
     flex: 1,
     display: { xs: 'none', md: 'flex' },
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'flex-end',
-    gap: 1,
+    gap: 1.5,
+  },
+  greeting: {
+    color: 'white',
+    lineHeight: 1,
+    fontSize: '0.9375rem',
+    fontWeight: 500,
+    display: 'inline-flex',
+    alignItems: 'center',
+    whiteSpace: 'nowrap',
   },
   drawerBox: {
     width: 250,

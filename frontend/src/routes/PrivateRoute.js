@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
+import { Box, CircularProgress } from '@mui/material';
 import { getMe } from '../services/api';
 
 export default function PrivateRoute({ children }) {
+  const location = useLocation();
   const [status, setStatus] = useState('checking');
 
   useEffect(() => {
@@ -18,11 +20,15 @@ export default function PrivateRoute({ children }) {
   }, []);
 
   if (status === 'checking') {
-    return null;
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '40vh' }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
   if (status === 'denied') {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
   return children;

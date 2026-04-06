@@ -4,6 +4,8 @@ import { Card, CardContent, Typography, Box } from '@mui/material';
 import styles from './testimonialCard.styles';
 
 export default function TestimonialCard({ name, rating, text, date }) {
+  const n = Number(rating);
+  const stars = Number.isFinite(n) && n >= 1 && n <= 5 ? n : 5;
   return (
     <Card
       role="article"
@@ -16,7 +18,7 @@ export default function TestimonialCard({ name, rating, text, date }) {
         </Typography>
 
         <Box sx={styles.stars} aria-hidden>
-          {'★'.repeat(rating) + '☆'.repeat(5 - rating)}
+          {'★'.repeat(stars) + '☆'.repeat(5 - stars)}
         </Box>
 
         <Typography variant="body2" sx={styles.text}>
