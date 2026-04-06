@@ -1,6 +1,6 @@
 .gallery-section {
-  padding: 2rem 1rem;
-  max-width: 1000px;
+  padding: 2rem 1rem 3rem;
+  max-width: 1100px;
   margin: 0 auto;
   text-align: center;
 }
@@ -8,35 +8,120 @@
 .gallery-section h2 {
   font-size: 2rem;
   color: #0db1ad;
-  margin-bottom: 2rem;
+  margin-bottom: 0.5rem;
 }
 
-.gallery-rows {
+.gallery-section-lead {
+  color: #666;
+  font-size: 1rem;
+  margin-bottom: 2rem;
+  max-width: 36rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.gallery-cases {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 2.5rem;
+  align-items: center;
 }
 
-.gallery-row {
+.gallery-case {
+  width: 100%;
+  max-width: 920px;
+  background: #fafdfd;
+  border-radius: 12px;
+  padding: 1rem 1rem 1.25rem;
+  box-shadow: 0 2px 12px rgba(13, 177, 173, 0.12);
+}
+
+.gallery-case-pair {
   display: flex;
-  justify-content: center;
-  gap: 24px;
+  flex-direction: row;
   flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem 1.25rem;
+  align-items: flex-start;
 }
 
-.gallery-item {
-  flex: 1 1 45%;
-  max-width: 400px;
+.gallery-case-pair--two .gallery-case-panel {
+  flex: 1 1 calc(50% - 0.75rem);
+  min-width: min(100%, 260px);
+  max-width: 100%;
 }
 
-.gallery-item img {
+.gallery-case-pair--one .gallery-case-panel {
+  flex: 1 1 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.gallery-case-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gallery-case-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #0db1ad;
+}
+
+.gallery-case-image-wrap {
   width: 100%;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.caption {
-  margin-top: 8px;
+.gallery-case-image-wrap img {
+  display: block;
+  width: 100%;
+  height: auto;
+  vertical-align: middle;
+}
+
+.gallery-case-meta {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.gallery-case-title {
+  font-size: 1.15rem;
+  margin: 0 0 0.35rem;
+  color: #222;
+  font-weight: 600;
+}
+
+.gallery-case-category {
+  display: inline-block;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #0db1ad;
+  margin-bottom: 0.35rem;
+}
+
+.gallery-case-desc {
+  margin: 0;
   font-size: 0.95rem;
   color: #555;
+  line-height: 1.45;
+}
+
+@media (max-width: 600px) {
+  .gallery-case-pair--two {
+    flex-direction: column;
+  }
+
+  .gallery-case-pair--two .gallery-case-panel {
+    flex: 1 1 100%;
+    max-width: 420px;
+    margin: 0 auto;
+  }
 }

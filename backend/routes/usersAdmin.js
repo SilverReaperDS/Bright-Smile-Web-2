@@ -1,0 +1,20 @@
+const express = require('express');
+const router = express.Router();
+const { verifyToken, isAdmin } = require('../middleware/auth');
+const {
+  listUsers,
+  listStaff,
+  createStaff,
+  updateStaff,
+  deleteStaff,
+} = require('../controllers/usersAdminController');
+
+router.use(verifyToken, isAdmin);
+
+router.get('/staff', listStaff);
+router.post('/staff', createStaff);
+router.patch('/staff/:id', updateStaff);
+router.delete('/staff/:id', deleteStaff);
+router.get('/', listUsers);
+
+module.exports = router;

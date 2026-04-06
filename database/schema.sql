@@ -10,6 +10,7 @@ CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   username VARCHAR(255) NOT NULL UNIQUE,
   email VARCHAR(255) NOT NULL UNIQUE,
+  phone VARCHAR(50) NOT NULL DEFAULT '',
   password_hash VARCHAR(255) NOT NULL,
   role VARCHAR(50) NOT NULL DEFAULT 'patient'
     CHECK (role IN ('patient', 'staff', 'admin')),
@@ -22,6 +23,7 @@ CREATE INDEX idx_users_username ON users (lower(username));
 CREATE TABLE appointments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users (id) ON DELETE SET NULL,
+  assigned_staff_id UUID REFERENCES users (id) ON DELETE SET NULL,
   appointment_date TIMESTAMPTZ NOT NULL,
   status VARCHAR(50) NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'confirmed', 'canceled')),
@@ -30,6 +32,7 @@ CREATE TABLE appointments (
 );
 
 CREATE INDEX idx_appointments_user_id ON appointments (user_id);
+CREATE INDEX idx_appointments_assigned_staff ON appointments (assigned_staff_id);
 CREATE INDEX idx_appointments_date ON appointments (appointment_date);
 
 -- ---------------------------------------------------------------------------
@@ -42,7 +45,7 @@ CREATE TABLE testimonials (
   text TEXT NOT NULL,
   rating SMALLINT CHECK (rating IS NULL OR (rating >= 1 AND rating <= 5)),
   status VARCHAR(50) NOT NULL DEFAULT 'pending'
-    CHECK (status IN ('pending', 'approved')),
+    CHECK (status IN ('pending', 'approved', 'rejected')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -52,6 +55,7 @@ CREATE TABLE messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(255),
   email VARCHAR(255),
+  phone VARCHAR(50),
   message TEXT,
   read BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -66,10 +70,25 @@ CREATE TABLE gallery_items (
   description TEXT,
   image_url TEXT,
   category VARCHAR(255),
+  sort_order INT NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE INDEX idx_gallery_created_at ON gallery_items (created_at DESC);
+CREATE INDEX idx_gallery_sort_order ON gallery_items (sort_order ASC, created_at DESC);
+
+CREATE TABLE gallery_cases (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title VARCHAR(500),
+  description TEXT,
+  category VARCHAR(255),
+  before_image_url TEXT NOT NULL,
+  after_image_url TEXT,
+  sort_order INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_gallery_cases_sort ON gallery_cases (sort_order ASC, created_at DESC);
 
 -- ---------------------------------------------------------------------------
 -- Marketing / static pages (optional DB-backed copy of public JSON)

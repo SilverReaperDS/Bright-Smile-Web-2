@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
+import { getTestimonials } from '../../services/api';
 import {
   Box,
   Typography,
@@ -21,10 +22,14 @@ export default function Home() {
       .then(setServices)
       .catch(() => setServices([]));
 
-    fetch('/data/testimonials.json')
-      .then((r) => r.json())
+    const ac = new AbortController();
+    getTestimonials({ signal: ac.signal })
       .then(setTestimonials)
-      .catch(() => setTestimonials([]));
+      .catch(() => {
+        if (ac.signal.aborted) return;
+        setTestimonials([]);
+      });
+    return () => ac.abort();
   }, []);
 
   return (
@@ -47,7 +52,7 @@ export default function Home() {
         </Typography>
         <Button
           component={RouterLink}
-          to="/contact"
+          to="/book-appointment"
           variant="contained"
           sx={{
             backgroundColor: '#0db1ad',
@@ -74,7 +79,7 @@ export default function Home() {
             <Grid item key={s.id} xs={12} sm={6} md={4}>
               <Box
                 component={RouterLink}
-                to={`/services/${s.id}`}
+                to={s.link || '/'}
                 sx={{
                   textDecoration: 'none',
                   color: 'inherit',

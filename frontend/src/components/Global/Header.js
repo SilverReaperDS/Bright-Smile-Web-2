@@ -24,6 +24,7 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [username, setUsername] = useState(null);
+  const [role, setRole] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
@@ -40,10 +41,12 @@ export default function Header() {
       try {
         const data = await getMe();
         setUsername(data.username);
+        setRole(data.role);
       } catch {
         localStorage.removeItem('authToken');
         localStorage.removeItem('username');
         setUsername(null);
+        setRole(null);
       }
     };
     fetchUser();
@@ -55,6 +58,7 @@ export default function Header() {
     localStorage.removeItem('authToken');
     localStorage.removeItem('username');
     setUsername(null);
+    setRole(null);
     navigate('/login');
   };
 
@@ -74,6 +78,7 @@ export default function Header() {
     },
     { label: 'Gallery', path: '/gallery' },
     { label: 'Testimonials', path: '/testimonials' },
+    { label: 'Book appointment', path: '/book-appointment' },
     { label: 'Contact', path: '/contact' },
   ];
 
@@ -137,7 +142,19 @@ export default function Header() {
           <Box sx={styles.authBox}>
             {username ? (
               <>
-                <Typography sx={{ color: 'white' }}>Hi, {username}</Typography>
+                <Typography component="span" variant="body2" sx={styles.greeting}>
+                  Hi, {username}
+                </Typography>
+                {role === 'admin' && (
+                  <Button component={Link} to="/dashboard" color="inherit" sx={{ fontWeight: 600 }}>
+                    Dashboard
+                  </Button>
+                )}
+                {(role === 'patient' || role === 'staff') && (
+                  <Button component={Link} to="/my-dashboard" color="inherit" sx={{ fontWeight: 600 }}>
+                    My dashboard
+                  </Button>
+                )}
                 <Button onClick={handleLogout} color="inherit">
                   Logout
                 </Button>
@@ -208,6 +225,30 @@ export default function Header() {
           {username ? (
             <>
               <Typography sx={{ mb: 1 }}>Hi, {username}</Typography>
+              {role === 'admin' && (
+                <Button
+                  component={Link}
+                  to="/dashboard"
+                  variant="contained"
+                  fullWidth
+                  sx={{ mb: 1 }}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Dashboard
+                </Button>
+              )}
+              {(role === 'patient' || role === 'staff') && (
+                <Button
+                  component={Link}
+                  to="/my-dashboard"
+                  variant="contained"
+                  fullWidth
+                  sx={{ mb: 1 }}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  My dashboard
+                </Button>
+              )}
               <Button variant="outlined" fullWidth onClick={handleLogout}>
                 Logout
               </Button>

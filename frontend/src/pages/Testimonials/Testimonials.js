@@ -1,5 +1,5 @@
 // src/pages/Testimonials/Testimonials.js
-import React from 'react';
+import React, { useCallback } from 'react';
 import { getTestimonials } from '../../services/api';
 import useFetch from '../../hooks/useFetch';
 import TestimonialCard from '../../components/Testimonials/TestimonialCard';
@@ -16,8 +16,8 @@ import {
 import styles from './testimonials.styles';
 
 export default function Testimonials() {
-  const fetcher = () => getTestimonials();
-  const { data: testimonials, loading, error, refetch } = useFetch(fetcher, []);
+  const fetcher = useCallback((opts) => getTestimonials(opts), []);
+  const { data: testimonials, loading, error, refetch } = useFetch(fetcher, [fetcher]);
 
   return (
     <Box sx={styles.section}>
