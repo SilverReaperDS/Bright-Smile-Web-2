@@ -30,6 +30,12 @@ async function ensureSchema() {
       ALTER TABLE messages ADD COLUMN IF NOT EXISTS phone VARCHAR(50);
     `);
     await client.query(`
+      ALTER TABLE messages ADD COLUMN IF NOT EXISTS archived BOOLEAN NOT NULL DEFAULT false;
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_messages_archived ON messages (archived);
+    `);
+    await client.query(`
       ALTER TABLE messages ADD COLUMN IF NOT EXISTS thread_id UUID;
     `);
     await client.query(`

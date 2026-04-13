@@ -19,6 +19,8 @@ import {
   fetchAdminThreadMessages,
   postAdminThreadReply,
   deleteAdminMessage,
+  patchAdminThreadRead,
+  patchAdminThreadArchive,
 } from '../../services/api';
 
 function formatWhen(iso) {
@@ -160,6 +162,59 @@ export default function Messages() {
                 {selected.name} · {selected.email} · {selected.phone || '—'}
               </Typography>
             )}
+            {selectedId && (
+  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1 }}>
+    <Button
+      size="small"
+      variant="outlined"
+      onClick={async () => {
+        try {
+          await patchAdminThreadRead(selectedId, true);
+          await loadThreads();
+          await loadMessages(selectedId);
+        } catch (e) {
+          setError(e.message || 'Failed to mark as read');
+        }
+      }}
+    >
+      Mark as read
+    </Button>
+
+    <Button
+      size="small"
+      variant="outlined"
+      onClick={async () => {
+        try {
+          await patchAdminThreadRead(selectedId, false);
+          await loadThreads();
+          await loadMessages(selectedId);
+        } catch (e) {
+          setError(e.message || 'Failed to mark as unread');
+        }
+      }}
+    >
+      Mark as unread
+    </Button>
+
+    <Button
+      size="small"
+      color="warning"
+      variant="outlined"
+      onClick={async () => {
+        try {
+          await patchAdminThreadArchive(selectedId, true);
+          await loadThreads();
+          setSelectedId(null);
+          setMessages([]);
+        } catch (e) {
+          setError(e.message || 'Failed to archive thread');
+        }
+      }}
+    >
+      Archive
+    </Button>
+  </Box>
+)}
             <Box sx={{ flex: 1, overflow: 'auto', mb: 2, maxHeight: { xs: 320, md: 'none' } }}>
               {loadingMessages ? (
                 <CircularProgress size={28} />

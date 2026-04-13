@@ -58,11 +58,13 @@ CREATE TABLE messages (
   phone VARCHAR(50),
   message TEXT,
   read BOOLEAN NOT NULL DEFAULT false,
+  archived BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE INDEX idx_messages_read ON messages (read);
 CREATE INDEX idx_messages_created_at ON messages (created_at DESC);
+CREATE INDEX idx_messages_archived ON messages (archived);
 
 CREATE TABLE gallery_items (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

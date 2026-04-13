@@ -26,7 +26,7 @@ export function getApiBase() {
     return '';
   }
   return '';
-}
+} 
 
 async function parseErrorResponse(res) {
   const text = await res.text().catch(() => '');
@@ -311,6 +311,23 @@ export async function postAdminThreadReply(threadId, message) {
   return res.json();
 }
 
+export async function patchAdminThreadRead(threadId) {
+  const res = await fetch(`${getApiBase()}/api/messages/threads/${encodeURIComponent(threadId)}/read`, {
+    method: 'PATCH',
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(await parseErrorResponse(res));
+  return res.json();
+}
+
+export async function patchAdminThreadArchive(threadId) {
+  const res = await fetch(`${getApiBase()}/api/messages/threads/${encodeURIComponent(threadId)}/archive`, {
+    method: 'PATCH',
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(await parseErrorResponse(res));
+  return res.json();
+}
 export async function fetchMyThreads() {
   const res = await fetch(`${getApiBase()}/api/my/threads`, { headers: authHeaders() });
   if (!res.ok) throw new Error(await parseErrorResponse(res));

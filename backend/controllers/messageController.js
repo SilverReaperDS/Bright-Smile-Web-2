@@ -29,6 +29,7 @@ async function getThreadsSummaryAdmin(req, res) {
         (SELECT sender_role FROM messages x WHERE x.thread_id = m.thread_id ORDER BY x.created_at DESC LIMIT 1) AS last_sender_role,
         COUNT(*) FILTER (WHERE m.sender_role = 'patient' AND NOT m.read_by_admin)::int AS unread_count
       FROM messages m
+      WHERE NOT m.archived
       GROUP BY m.thread_id
       ORDER BY last_at DESC
     `);
@@ -54,7 +55,10 @@ async function getThreadsSummaryAdmin(req, res) {
 async function getThreadMessagesAdmin(req, res) {
   const { threadId } = req.params;
   try {
-    const { rows: exists } = await pool.query('SELECT 1 FROM messages WHERE thread_id = $1 LIMIT 1', [threadId]);
+    const { rows: exists } = await pool.query(
+      'SELECT 1 FROM messages WHERE thread_id = $1 AND NOT archived LIMIT 1',
+      [threadId]
+    );
     if (!exists.length) return res.status(404).json({ error: 'Thread not found' });
 
     await pool.query(
@@ -228,4 +232,6 @@ module.exports = {
   createMessage,
   updateMessage,
   deleteMessage,
+  patchThreadReadState,
+  patchThreadArchiveState,
 };
