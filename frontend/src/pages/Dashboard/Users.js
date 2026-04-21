@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -7,7 +7,6 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  Chip,
   Alert,
   TextField,
   Button,
@@ -17,42 +16,48 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
-} from '@mui/material';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+  Select,
+  MenuItem,
+} from "@mui/material";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import {
   fetchAdminUsers,
   fetchAdminStaff,
   createAdminStaff,
   patchAdminStaff,
   deleteAdminStaff,
-} from '../../services/api';
-import PasswordField from '../../components/PasswordField';
+  patchAdminUserRole,
+} from "../../services/api";
+import PasswordField from "../../components/PasswordField";
 
 export default function Users() {
   const [allUsers, setAllUsers] = useState([]);
   const [staff, setStaff] = useState([]);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [newUsername, setNewUsername] = useState('');
-  const [newEmail, setNewEmail] = useState('');
-  const [newPhone, setNewPhone] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  const [newUsername, setNewUsername] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newPhone, setNewPhone] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [saving, setSaving] = useState(false);
   const [editOpen, setEditOpen] = useState(null);
-  const [editUsername, setEditUsername] = useState('');
-  const [editEmail, setEditEmail] = useState('');
-  const [editPhone, setEditPhone] = useState('');
-  const [editPassword, setEditPassword] = useState('');
+  const [editUsername, setEditUsername] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editPassword, setEditPassword] = useState("");
 
   const load = useCallback(async () => {
-    setError('');
+    setError("");
     try {
-      const [users, staffList] = await Promise.all([fetchAdminUsers(), fetchAdminStaff()]);
+      const [users, staffList] = await Promise.all([
+        fetchAdminUsers(),
+        fetchAdminStaff(),
+      ]);
       setAllUsers(users);
       setStaff(staffList);
     } catch (e) {
-      setError(e.message || 'Failed to load');
+      setError(e.message || "Failed to load");
     } finally {
       setLoading(false);
     }
@@ -65,7 +70,7 @@ export default function Users() {
   const handleAddStaff = async (e) => {
     e.preventDefault();
     setSaving(true);
-    setError('');
+    setError("");
     try {
       await createAdminStaff({
         username: newUsername.trim(),
@@ -73,10 +78,10 @@ export default function Users() {
         phone: newPhone.trim(),
         password: newPassword,
       });
-      setNewUsername('');
-      setNewEmail('');
-      setNewPhone('');
-      setNewPassword('');
+      setNewUsername("");
+      setNewEmail("");
+      setNewPhone("");
+      setNewPassword("");
       await load();
     } catch (err) {
       setError(err.message);
@@ -89,14 +94,14 @@ export default function Users() {
     setEditOpen(member);
     setEditUsername(member.username);
     setEditEmail(member.email);
-    setEditPhone(member.phone || '');
-    setEditPassword('');
+    setEditPhone(member.phone || "");
+    setEditPassword("");
   };
 
   const submitEdit = async () => {
     if (!editOpen) return;
     setSaving(true);
-    setError('');
+    setError("");
     try {
       const body = {
         username: editUsername.trim(),
@@ -117,10 +122,14 @@ export default function Users() {
   };
 
   const removeStaff = async (member) => {
-    if (!window.confirm(`Remove staff account "${member.username}"? Assigned appointments will become unassigned.`)) {
+    if (
+      !window.confirm(
+        `Remove staff account "${member.username}"? Assigned appointments will become unassigned.`,
+      )
+    ) {
       return;
     }
-    setError('');
+    setError("");
     try {
       await deleteAdminStaff(member.id);
       await load();
@@ -128,7 +137,15 @@ export default function Users() {
       setError(err.message);
     }
   };
-
+  const handleRoleChange = async (userId, role) => {
+    setError("");
+    try {
+      await patchAdminUserRole(userId, { role });
+      await load();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
   if (loading) {
     return <Typography>Loading…</Typography>;
   }
@@ -139,7 +156,7 @@ export default function Users() {
         Users &amp; staff
       </Typography>
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
           {error}
         </Alert>
       )}
@@ -148,14 +165,22 @@ export default function Users() {
         Staff team
       </Typography>
       <Typography color="text.secondary" sx={{ mb: 2 }}>
-        Add clinic staff here. They can log in with the credentials you set. Appointments can only be assigned to people in this list.
+        Add clinic staff here. They can log in with the credentials you set.
+        Appointments can only be assigned to people in this list.
       </Typography>
 
       <Paper sx={{ p: 2, mb: 4 }} component="form" onSubmit={handleAddStaff}>
         <Typography variant="subtitle2" gutterBottom>
           Add staff member
         </Typography>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'flex-start' }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 2,
+            alignItems: "flex-start",
+          }}
+        >
           <TextField
             size="small"
             label="Username"
@@ -189,7 +214,12 @@ export default function Users() {
             helperText="8+ chars, number & special character"
             autoComplete="new-password"
           />
-          <Button type="submit" variant="contained" disabled={saving} sx={{ mt: 0.5 }}>
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={saving}
+            sx={{ mt: 0.5 }}
+          >
             Add staff
           </Button>
         </Box>
@@ -209,7 +239,10 @@ export default function Users() {
           {staff.length === 0 && (
             <TableRow>
               <TableCell colSpan={5}>
-                <Typography color="text.secondary">No staff yet. Add team members above for appointment assignment.</Typography>
+                <Typography color="text.secondary">
+                  No staff yet. Add team members above for appointment
+                  assignment.
+                </Typography>
               </TableCell>
             </TableRow>
           )}
@@ -218,12 +251,22 @@ export default function Users() {
               <TableCell>{new Date(s.createdAt).toLocaleString()}</TableCell>
               <TableCell>{s.username}</TableCell>
               <TableCell>{s.email}</TableCell>
-              <TableCell>{s.phone || '—'}</TableCell>
+              <TableCell>{s.phone || "—"}</TableCell>
               <TableCell align="right">
-                <IconButton aria-label="Edit" size="small" onClick={() => openEdit(s)} color="primary">
+                <IconButton
+                  aria-label="Edit"
+                  size="small"
+                  onClick={() => openEdit(s)}
+                  color="primary"
+                >
                   <EditOutlinedIcon />
                 </IconButton>
-                <IconButton aria-label="Delete" size="small" onClick={() => removeStaff(s)} color="error">
+                <IconButton
+                  aria-label="Delete"
+                  size="small"
+                  onClick={() => removeStaff(s)}
+                  color="error"
+                >
                   <DeleteOutlineIcon />
                 </IconButton>
               </TableCell>
@@ -261,20 +304,29 @@ export default function Users() {
               <TableCell>{new Date(u.createdAt).toLocaleString()}</TableCell>
               <TableCell>{u.username}</TableCell>
               <TableCell>{u.email}</TableCell>
-              <TableCell>{u.phone || '—'}</TableCell>
+              <TableCell>{u.phone || "—"}</TableCell>
               <TableCell>
-                <Chip
+                <Select
                   size="small"
-                  label={u.role}
-                  color={u.role === 'admin' ? 'error' : u.role === 'staff' ? 'primary' : 'default'}
-                />
+                  value={u.role}
+                  onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                >
+                  <MenuItem value="patient">patient</MenuItem>
+                  <MenuItem value="staff">staff</MenuItem>
+                  <MenuItem value="admin">admin</MenuItem>
+                </Select>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
 
-      <Dialog open={Boolean(editOpen)} onClose={() => setEditOpen(null)} fullWidth maxWidth="xs">
+      <Dialog
+        open={Boolean(editOpen)}
+        onClose={() => setEditOpen(null)}
+        fullWidth
+        maxWidth="xs"
+      >
         <DialogTitle>Edit staff</DialogTitle>
         <DialogContent>
           <TextField
