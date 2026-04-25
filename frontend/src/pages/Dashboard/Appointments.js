@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -26,6 +27,7 @@ import {
 import ChevronLeft from '@mui/icons-material/ChevronLeft';
 import ChevronRight from '@mui/icons-material/ChevronRight';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import FileDownloadOutlined from '@mui/icons-material/FileDownloadOutlined';
 import {
   fetchAppointments,
   fetchAppointmentStaff,
@@ -33,6 +35,7 @@ import {
   deleteAppointment,
   downloadAppointmentsCsv,
 } from '../../services/api';
+import dashStyles from './dashboard.styles';
 
 function pad(n) {
   return String(n).padStart(2, '0');
@@ -177,32 +180,49 @@ export default function Appointments() {
   };
 
   if (loading) {
-    return <Typography>Loading appointments…</Typography>;
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 3 }}>
+        <CircularProgress size={28} sx={{ color: '#0db1ad' }} />
+        <Typography sx={{ color: '#5a6b6b' }}>Loading appointments…</Typography>
+      </Box>
+    );
   }
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2 }}>
-        <Typography variant="h4">Appointments</Typography>
-        <Button variant="outlined" onClick={handleExport}>
+      <Box sx={dashStyles.pageHeader}>
+        <Box>
+          <Typography component="h1" sx={dashStyles.pageTitle}>
+            Appointments
+          </Typography>
+          <Typography sx={dashStyles.pageSubtitle}>
+            Manage schedules, assignments, and patient bookings.
+          </Typography>
+        </Box>
+        <Button
+          variant="outlined"
+          onClick={handleExport}
+          startIcon={<FileDownloadOutlined />}
+          sx={dashStyles.outlineBtn}
+        >
           Export CSV
         </Button>
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+        <Alert severity="error" sx={dashStyles.alert} onClose={() => setError('')}>
           {error}
         </Alert>
       )}
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={5}>
-          <Paper sx={{ p: 2 }}>
+          <Paper elevation={0} sx={dashStyles.card}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
               <IconButton onClick={() => setCursorMonth(new Date(cursorMonth.getFullYear(), cursorMonth.getMonth() - 1, 1))}>
                 <ChevronLeft />
               </IconButton>
-              <Typography variant="h6">
+              <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f2a2a' }}>
                 {cursorMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}
               </Typography>
               <IconButton onClick={() => setCursorMonth(new Date(cursorMonth.getFullYear(), cursorMonth.getMonth() + 1, 1))}>
@@ -211,7 +231,18 @@ export default function Appointments() {
             </Box>
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 0.5, textAlign: 'center' }}>
               {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
-                <Typography key={d} variant="caption" color="text.secondary" sx={{ py: 0.5 }}>
+                <Typography
+                  key={d}
+                  variant="caption"
+                  sx={{
+                    py: 0.5,
+                    color: '#5a6b6b',
+                    fontWeight: 700,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    fontSize: '0.7rem',
+                  }}
+                >
                   {d}
                 </Typography>
               ))}
@@ -224,13 +255,36 @@ export default function Appointments() {
                   <Button
                     key={key}
                     size="small"
-                    variant={isSel ? 'contained' : 'text'}
                     onClick={() => setSelectedDay(day)}
-                    sx={{ minWidth: 0, py: 1, flexDirection: 'column', lineHeight: 1.2 }}
+                    sx={{
+                      minWidth: 0,
+                      py: 1,
+                      flexDirection: 'column',
+                      lineHeight: 1.2,
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      fontWeight: isSel ? 700 : 500,
+                      color: isSel ? '#fff' : '#0f2a2a',
+                      background: isSel ? 'linear-gradient(135deg, #0db1ad, #088a87)' : 'transparent',
+                      '&:hover': {
+                        background: isSel
+                          ? 'linear-gradient(135deg, #088a87, #066a68)'
+                          : '#e6faf9',
+                      },
+                    }}
                   >
                     <span>{day.getDate()}</span>
                     {count > 0 && (
-                      <Typography component="span" variant="caption" sx={{ opacity: 0.9 }}>
+                      <Typography
+                        component="span"
+                        variant="caption"
+                        sx={{
+                          opacity: 0.95,
+                          fontSize: '0.65rem',
+                          color: isSel ? '#fff' : '#088a87',
+                          fontWeight: 600,
+                        }}
+                      >
                         {count} apt
                       </Typography>
                     )}
@@ -242,18 +296,18 @@ export default function Appointments() {
         </Grid>
 
         <Grid item xs={12} md={7}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
+          <Paper elevation={0} sx={dashStyles.card}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 700, color: '#0f2a2a' }}>
               {selectedDay.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
             </Typography>
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Time</TableCell>
-                  <TableCell>Patient</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Staff</TableCell>
-                  <TableCell align="right">Actions</TableCell>
+                  <TableCell sx={dashStyles.tableHeaderCell}>Time</TableCell>
+                  <TableCell sx={dashStyles.tableHeaderCell}>Patient</TableCell>
+                  <TableCell sx={dashStyles.tableHeaderCell}>Status</TableCell>
+                  <TableCell sx={dashStyles.tableHeaderCell}>Staff</TableCell>
+                  <TableCell align="right" sx={dashStyles.tableHeaderCell}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -265,7 +319,7 @@ export default function Appointments() {
                   </TableRow>
                 )}
                 {listForSelectedDay.map((apt) => (
-                  <TableRow key={apt.id}>
+                  <TableRow key={apt.id} hover>
                     <TableCell>
                       {new Date(apt.appointmentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </TableCell>
@@ -294,13 +348,13 @@ export default function Appointments() {
                       </FormControl>
                     </TableCell>
                     <TableCell align="right">
-                      <Button size="small" onClick={() => handleConfirm(apt.id)} disabled={apt.status === 'confirmed'}>
+                      <Button size="small" onClick={() => handleConfirm(apt.id)} disabled={apt.status === 'confirmed'} sx={{ textTransform: 'none' }}>
                         Confirm
                       </Button>
-                      <Button size="small" color="warning" onClick={() => openReschedule(apt)}>
+                      <Button size="small" color="warning" onClick={() => openReschedule(apt)} sx={{ textTransform: 'none' }}>
                         Reschedule
                       </Button>
-                      <Button size="small" color="error" onClick={() => handleCancel(apt.id)} disabled={apt.status === 'canceled'}>
+                      <Button size="small" color="error" onClick={() => handleCancel(apt.id)} disabled={apt.status === 'canceled'} sx={{ textTransform: 'none' }}>
                         Cancel
                       </Button>
                     </TableCell>
@@ -312,18 +366,18 @@ export default function Appointments() {
         </Grid>
       </Grid>
 
-      <Paper sx={{ p: 2, mt: 3 }}>
-        <Typography variant="h6" gutterBottom>
+      <Paper elevation={0} sx={{ ...dashStyles.card, mt: 3 }}>
+        <Typography variant="h6" gutterBottom sx={{ fontWeight: 700, color: '#0f2a2a' }}>
           All appointments
         </Typography>
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Date & time</TableCell>
-              <TableCell>Patient</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Staff</TableCell>
-              <TableCell align="right">Delete</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Date & time</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Patient</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Status</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Staff</TableCell>
+              <TableCell align="right" sx={dashStyles.tableHeaderCell}>Delete</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -366,7 +420,7 @@ export default function Appointments() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setReschedule(null)}>Close</Button>
-          <Button variant="contained" onClick={submitReschedule}>
+          <Button variant="contained" onClick={submitReschedule} sx={dashStyles.primaryBtn}>
             Save
           </Button>
         </DialogActions>

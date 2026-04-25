@@ -11,7 +11,6 @@ import {
   CircularProgress,
   Alert,
   Button,
-  Grid,
 } from '@mui/material';
 import styles from './testimonials.styles';
 
@@ -61,13 +60,11 @@ export default function Testimonials() {
               <Typography variant="h5" component="h3" sx={styles.allTestimonialsHeading}>
                 All Testimonials
               </Typography>
-              <Grid container spacing={3}>
+              <Box sx={styles.list}>
                 {testimonials.map((t) => (
-                  <Grid item key={t.id} xs={12} sm={6} md={4}>
-                    <TestimonialCard {...t} />
-                  </Grid>
+                  <TestimonialCard key={t.id} {...t} />
                 ))}
-              </Grid>
+              </Box>
             </Box>
           </>
         )}

@@ -28,6 +28,11 @@ const styles = {
     mb: 3,
     fontWeight: 500,
   },
+  list: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 2,
+  },
   emptyState: {
     textAlign: 'center',
     mt: 4,

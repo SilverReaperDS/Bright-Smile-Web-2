@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -18,9 +18,10 @@ import {
   IconButton,
   Select,
   MenuItem,
-} from "@mui/material";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+  CircularProgress,
+} from '@mui/material';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import {
   fetchAdminUsers,
   fetchAdminStaff,
@@ -28,27 +29,28 @@ import {
   patchAdminStaff,
   deleteAdminStaff,
   patchAdminUserRole,
-} from "../../services/api";
-import PasswordField from "../../components/PasswordField";
+} from '../../services/api';
+import PasswordField from '../../components/PasswordField';
+import dashStyles from './dashboard.styles';
 
 export default function Users() {
   const [allUsers, setAllUsers] = useState([]);
   const [staff, setStaff] = useState([]);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [newUsername, setNewUsername] = useState("");
-  const [newEmail, setNewEmail] = useState("");
-  const [newPhone, setNewPhone] = useState("");
-  const [newPassword, setNewPassword] = useState("");
+  const [newUsername, setNewUsername] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newPhone, setNewPhone] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [saving, setSaving] = useState(false);
   const [editOpen, setEditOpen] = useState(null);
-  const [editUsername, setEditUsername] = useState("");
-  const [editEmail, setEditEmail] = useState("");
-  const [editPhone, setEditPhone] = useState("");
-  const [editPassword, setEditPassword] = useState("");
+  const [editUsername, setEditUsername] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editPassword, setEditPassword] = useState('');
 
   const load = useCallback(async () => {
-    setError("");
+    setError('');
     try {
       const [users, staffList] = await Promise.all([
         fetchAdminUsers(),
@@ -57,7 +59,7 @@ export default function Users() {
       setAllUsers(users);
       setStaff(staffList);
     } catch (e) {
-      setError(e.message || "Failed to load");
+      setError(e.message || 'Failed to load');
     } finally {
       setLoading(false);
     }
@@ -70,7 +72,7 @@ export default function Users() {
   const handleAddStaff = async (e) => {
     e.preventDefault();
     setSaving(true);
-    setError("");
+    setError('');
     try {
       await createAdminStaff({
         username: newUsername.trim(),
@@ -78,10 +80,10 @@ export default function Users() {
         phone: newPhone.trim(),
         password: newPassword,
       });
-      setNewUsername("");
-      setNewEmail("");
-      setNewPhone("");
-      setNewPassword("");
+      setNewUsername('');
+      setNewEmail('');
+      setNewPhone('');
+      setNewPassword('');
       await load();
     } catch (err) {
       setError(err.message);
@@ -94,14 +96,14 @@ export default function Users() {
     setEditOpen(member);
     setEditUsername(member.username);
     setEditEmail(member.email);
-    setEditPhone(member.phone || "");
-    setEditPassword("");
+    setEditPhone(member.phone || '');
+    setEditPassword('');
   };
 
   const submitEdit = async () => {
     if (!editOpen) return;
     setSaving(true);
-    setError("");
+    setError('');
     try {
       const body = {
         username: editUsername.trim(),
@@ -129,7 +131,7 @@ export default function Users() {
     ) {
       return;
     }
-    setError("");
+    setError('');
     try {
       await deleteAdminStaff(member.id);
       await load();
@@ -138,7 +140,7 @@ export default function Users() {
     }
   };
   const handleRoleChange = async (userId, role) => {
-    setError("");
+    setError('');
     try {
       await patchAdminUserRole(userId, { role });
       await load();
@@ -147,38 +149,49 @@ export default function Users() {
     }
   };
   if (loading) {
-    return <Typography>Loading…</Typography>;
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 3 }}>
+        <CircularProgress size={28} sx={{ color: '#0db1ad' }} />
+        <Typography sx={{ color: '#5a6b6b' }}>Loading…</Typography>
+      </Box>
+    );
   }
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Users &amp; staff
-      </Typography>
+      <Box sx={dashStyles.pageHeader}>
+        <Box>
+          <Typography component="h1" sx={dashStyles.pageTitle}>
+            Users &amp; staff
+          </Typography>
+          <Typography sx={dashStyles.pageSubtitle}>
+            Manage your clinic team and registered patients.
+          </Typography>
+        </Box>
+      </Box>
+
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
+        <Alert severity="error" sx={dashStyles.alert} onClose={() => setError('')}>
           {error}
         </Alert>
       )}
 
-      <Typography variant="h6" gutterBottom sx={{ mt: 1 }}>
-        Staff team
-      </Typography>
+      <Typography sx={dashStyles.sectionTitle}>Staff team</Typography>
       <Typography color="text.secondary" sx={{ mb: 2 }}>
         Add clinic staff here. They can log in with the credentials you set.
         Appointments can only be assigned to people in this list.
       </Typography>
 
-      <Paper sx={{ p: 2, mb: 4 }} component="form" onSubmit={handleAddStaff}>
-        <Typography variant="subtitle2" gutterBottom>
+      <Paper elevation={0} sx={{ ...dashStyles.card, mb: 4 }} component="form" onSubmit={handleAddStaff}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#0f2a2a', mb: 2 }}>
           Add staff member
         </Typography>
         <Box
           sx={{
-            display: "flex",
-            flexWrap: "wrap",
+            display: 'flex',
+            flexWrap: 'wrap',
             gap: 2,
-            alignItems: "flex-start",
+            alignItems: 'flex-start',
           }}
         >
           <TextField
@@ -214,112 +227,96 @@ export default function Users() {
             helperText="8+ chars, number & special character"
             autoComplete="new-password"
           />
-          <Button
-            type="submit"
-            variant="contained"
-            disabled={saving}
-            sx={{ mt: 0.5 }}
-          >
+          <Button type="submit" variant="contained" disabled={saving} sx={{ mt: 0.5, ...dashStyles.primaryBtn }}>
             Add staff
           </Button>
         </Box>
       </Paper>
 
-      <Table size="small" sx={{ mb: 4 }}>
-        <TableHead>
-          <TableRow>
-            <TableCell>Joined</TableCell>
-            <TableCell>Username</TableCell>
-            <TableCell>Email</TableCell>
-            <TableCell>Phone</TableCell>
-            <TableCell align="right">Manage</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {staff.length === 0 && (
+      <Paper elevation={0} sx={{ ...dashStyles.card, mb: 4 }}>
+        <Table size="small">
+          <TableHead>
             <TableRow>
-              <TableCell colSpan={5}>
-                <Typography color="text.secondary">
-                  No staff yet. Add team members above for appointment
-                  assignment.
-                </Typography>
-              </TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Joined</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Username</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Email</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Phone</TableCell>
+              <TableCell align="right" sx={dashStyles.tableHeaderCell}>Manage</TableCell>
             </TableRow>
-          )}
-          {staff.map((s) => (
-            <TableRow key={s.id}>
-              <TableCell>{new Date(s.createdAt).toLocaleString()}</TableCell>
-              <TableCell>{s.username}</TableCell>
-              <TableCell>{s.email}</TableCell>
-              <TableCell>{s.phone || "—"}</TableCell>
-              <TableCell align="right">
-                <IconButton
-                  aria-label="Edit"
-                  size="small"
-                  onClick={() => openEdit(s)}
-                  color="primary"
-                >
-                  <EditOutlinedIcon />
-                </IconButton>
-                <IconButton
-                  aria-label="Delete"
-                  size="small"
-                  onClick={() => removeStaff(s)}
-                  color="error"
-                >
-                  <DeleteOutlineIcon />
-                </IconButton>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHead>
+          <TableBody>
+            {staff.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5}>
+                  <Typography color="text.secondary">No staff yet. Add team members above for appointment assignment.</Typography>
+                </TableCell>
+              </TableRow>
+            )}
+            {staff.map((s) => (
+              <TableRow key={s.id} hover>
+                <TableCell>{new Date(s.createdAt).toLocaleString()}</TableCell>
+                <TableCell>{s.username}</TableCell>
+                <TableCell>{s.email}</TableCell>
+                <TableCell>{s.phone || '—'}</TableCell>
+                <TableCell align="right">
+                  <IconButton aria-label="Edit" size="small" onClick={() => openEdit(s)} color="primary">
+                    <EditOutlinedIcon />
+                  </IconButton>
+                  <IconButton aria-label="Delete" size="small" onClick={() => removeStaff(s)} color="error">
+                    <DeleteOutlineIcon />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Paper>
 
-      <Typography variant="h6" gutterBottom>
-        All accounts
-      </Typography>
+      <Typography sx={dashStyles.sectionTitle}>All accounts</Typography>
       <Typography color="text.secondary" sx={{ mb: 2 }}>
         Every registered user (patients, staff, admins).
       </Typography>
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>Joined</TableCell>
-            <TableCell>Username</TableCell>
-            <TableCell>Email</TableCell>
-            <TableCell>Phone</TableCell>
-            <TableCell>Role</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {allUsers.length === 0 && (
+      <Paper elevation={0} sx={dashStyles.card}>
+        <Table size="small">
+          <TableHead>
             <TableRow>
-              <TableCell colSpan={5}>
-                <Typography color="text.secondary">No users.</Typography>
-              </TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Joined</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Username</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Email</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Phone</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Role</TableCell>
             </TableRow>
-          )}
-          {allUsers.map((u) => (
-            <TableRow key={u.id}>
-              <TableCell>{new Date(u.createdAt).toLocaleString()}</TableCell>
-              <TableCell>{u.username}</TableCell>
-              <TableCell>{u.email}</TableCell>
-              <TableCell>{u.phone || "—"}</TableCell>
-              <TableCell>
-                <Select
-                  size="small"
-                  value={u.role}
-                  onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                >
-                  <MenuItem value="patient">patient</MenuItem>
-                  <MenuItem value="staff">staff</MenuItem>
-                  <MenuItem value="admin">admin</MenuItem>
-                </Select>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHead>
+          <TableBody>
+            {allUsers.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5}>
+                  <Typography color="text.secondary">No users.</Typography>
+                </TableCell>
+              </TableRow>
+            )}
+            {allUsers.map((u) => (
+              <TableRow key={u.id} hover>
+                <TableCell>{new Date(u.createdAt).toLocaleString()}</TableCell>
+                <TableCell>{u.username}</TableCell>
+                <TableCell>{u.email}</TableCell>
+                <TableCell>{u.phone || '—'}</TableCell>
+                <TableCell>
+                  <Select
+                    size="small"
+                    value={u.role}
+                    onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                  />
+                    <MenuItem value="patient">patient</MenuItem>
+                    <MenuItem value="staff">staff</MenuItem>
+                    <MenuItem value="admin">admin</MenuItem>
+                  </Select>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Paper>
 
       <Dialog
         open={Boolean(editOpen)}
@@ -364,7 +361,7 @@ export default function Users() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditOpen(null)}>Cancel</Button>
-          <Button variant="contained" onClick={submitEdit} disabled={saving}>
+          <Button variant="contained" onClick={submitEdit} disabled={saving} sx={dashStyles.primaryBtn}>
             Save
           </Button>
         </DialogActions>

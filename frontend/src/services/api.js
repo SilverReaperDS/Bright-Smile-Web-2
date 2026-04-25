@@ -607,3 +607,28 @@ export async function downloadAppointmentsCsv() {
   a.click();
   URL.revokeObjectURL(url);
 }
+
+export async function fetchMyTestimonials() {
+  const res = await fetch(`${getApiBase()}/api/my/testimonials`, { headers: authHeaders() });
+  if (!res.ok) throw new Error(await parseErrorResponse(res));
+  return res.json();
+}
+
+export async function createMyTestimonial({ text, rating, authorName }) {
+  const res = await fetch(`${getApiBase()}/api/my/testimonials`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({ text, rating, authorName }),
+  });
+  if (!res.ok) throw new Error(await parseErrorResponse(res));
+  return res.json();
+}
+
+export async function deleteMyTestimonial(id) {
+  const res = await fetch(`${getApiBase()}/api/my/testimonials/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(await parseErrorResponse(res));
+  return res.json();
+}
