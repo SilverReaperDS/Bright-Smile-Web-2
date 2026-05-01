@@ -1,7 +1,12 @@
 // src/pages/Dashboard/Overview.js
 import React, { useEffect, useState } from 'react';
-import { Box, Grid, Paper, Typography, Alert } from '@mui/material';
+import { Box, Grid, Typography, Alert } from '@mui/material';
+import PeopleAltOutlined from '@mui/icons-material/PeopleAltOutlined';
+import EventAvailableOutlined from '@mui/icons-material/EventAvailableOutlined';
+import RateReviewOutlined from '@mui/icons-material/RateReviewOutlined';
+import MarkEmailUnreadOutlined from '@mui/icons-material/MarkEmailUnreadOutlined';
 import { fetchDashboardOverview } from '../../services/api';
+import dashStyles from './dashboard.styles';
 
 export default function Overview() {
   const [stats, setStats] = useState({
@@ -24,33 +29,53 @@ export default function Overview() {
   }, []);
 
   const cards = [
-    { label: 'Total Users', value: stats.users },
-    { label: 'Appointments', value: stats.appointments },
-    { label: 'Pending Testimonials', value: stats.testimonialsPending },
-    { label: 'Unread Messages', value: stats.messagesUnread },
+    { label: 'Total Users', value: stats.users, icon: PeopleAltOutlined, variant: 'teal' },
+    { label: 'Appointments', value: stats.appointments, icon: EventAvailableOutlined, variant: 'coral' },
+    { label: 'Pending Testimonials', value: stats.testimonialsPending, icon: RateReviewOutlined, variant: 'amber' },
+    { label: 'Unread Messages', value: stats.messagesUnread, icon: MarkEmailUnreadOutlined, variant: 'violet' },
   ];
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Dashboard Overview
-      </Typography>
+      <Box sx={dashStyles.pageHeader}>
+        <Box>
+          <Typography component="h1" sx={dashStyles.pageTitle}>
+            Dashboard Overview
+          </Typography>
+          <Typography sx={dashStyles.pageSubtitle}>
+            Snapshot of your clinic's activity at a glance.
+          </Typography>
+        </Box>
+      </Box>
+
       {error && (
-        <Alert severity="warning" sx={{ mb: 2 }}>
+        <Alert severity="warning" sx={{ ...dashStyles.alert }}>
           {error}. Check that the backend is running and you are logged in as admin.
         </Alert>
       )}
+
       <Grid container spacing={3}>
-        {cards.map(({ label, value }) => (
-          <Grid item xs={12} sm={6} md={3} key={label}>
-            <Paper sx={{ p: 3, textAlign: 'center' }}>
-              <Typography variant="h6">{label}</Typography>
-              <Typography variant="h4" color="primary">
-                {value}
-              </Typography>
-            </Paper>
-          </Grid>
-        ))}
+        {cards.map(({ label, value, icon: Icon, variant }) => {
+          const v = dashStyles.statVariants[variant];
+          return (
+            <Grid item xs={12} sm={6} md={3} key={label}>
+              <Box
+                sx={{
+                  ...dashStyles.statCardBase,
+                  border: v.tintBorder,
+                }}
+              >
+                <Box sx={{ ...dashStyles.statIconWrap, background: v.iconBg }}>
+                  <Icon sx={{ fontSize: 28 }} />
+                </Box>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography sx={dashStyles.statLabel}>{label}</Typography>
+                  <Typography sx={dashStyles.statValue}>{value}</Typography>
+                </Box>
+              </Box>
+            </Grid>
+          );
+        })}
       </Grid>
     </Box>
   );

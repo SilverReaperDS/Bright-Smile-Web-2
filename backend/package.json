@@ -7,7 +7,9 @@
   "scripts": {
     "start": "node server.js",
     "seed:admin": "node scripts/seedAdmin.js",
-    "seed:admin:reset": "node scripts/seedAdmin.js --reset-password"
+    "seed:admin:reset": "node scripts/seedAdmin.js --reset-password",
+    "seed:staff": "node scripts/seedStaff.js",
+    "seed:staff:reset": "node scripts/seedStaff.js --reset-password"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

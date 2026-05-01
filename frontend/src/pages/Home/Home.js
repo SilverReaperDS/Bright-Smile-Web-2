@@ -33,7 +33,7 @@ export default function Home() {
   }, []);
 
   return (
-    <Container sx={{ py: 6 }}>
+    <Container maxWidth="xl" sx={{ py: { xs: 4, md: 6 }, px: { xs: 2, sm: 3, md: 4 } }}>
       <Box
         sx={{
           textAlign: 'center',
@@ -55,14 +55,17 @@ export default function Home() {
           to="/book-appointment"
           variant="contained"
           sx={{
-            backgroundColor: '#0db1ad',
+            background: 'linear-gradient(135deg, #0db1ad 0%, #0a8f8c 100%)',
             color: 'white',
-            px: 3,
-            py: 1.5,
-            borderRadius: '6px',
+            fontWeight: 800,
+            px: 3.25,
+            py: 1.35,
+            borderRadius: '14px',
             textTransform: 'none',
+            boxShadow: '0 18px 40px -24px rgba(8, 38, 38, 0.55)',
             '&:hover': {
-              backgroundColor: '#178e8b',
+              background: 'linear-gradient(135deg, #0a8f8c 0%, #0db1ad 100%)',
+              boxShadow: '0 22px 50px -30px rgba(8, 38, 38, 0.65)',
             },
           }}
         >
@@ -71,45 +74,37 @@ export default function Home() {
       </Box>
 
       <Box component="section" sx={{ mb: 6 }}>
-        <Typography variant="h5" component="h3" sx={{ mb: 3, fontWeight: 500 }}>
+        <Typography
+          variant="h5"
+          component="h3"
+          sx={{ mb: 3, fontWeight: 500, textAlign: 'center' }}
+        >
           Our Services
         </Typography>
-        <Grid container spacing={3}>
-          {services.map((s) => (
-            <Grid item key={s.id} xs={12} sm={6} md={4}>
-              <Box
-                component={RouterLink}
-                to={s.link || '/'}
+        <Box sx={{ maxWidth: 1500, mx: 'auto', width: '100%' }}>
+          <Grid
+            container
+            spacing={3}
+            alignItems="stretch"
+            justifyContent="center"
+          >
+            {services.map((s) => (
+              <Grid
+                item
+                key={s.id}
+                xs={12}
+                sm="auto"
                 sx={{
-                  textDecoration: 'none',
-                  color: 'inherit',
-                  display: 'block',
-                  transition: 'transform 0.2s ease',
-                  '&:hover .service-card': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 6px 16px rgba(0, 0, 0, 0.1)',
-                  },
+                  display: 'flex',
+                  width: { xs: '100%', sm: 450 },
+                  maxWidth: '100%',
                 }}
               >
-                <Box
-                  className="service-card"
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    height: '100%',
-                    border: '1px solid #eee',
-                    borderRadius: '8px',
-                    overflow: 'hidden',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                  }}
-                >
-                  <ServiceCard {...s} />
-                </Box>
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
+                <ServiceCard {...s} />
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
       </Box>
 
       <Box component="section" sx={{ mt: 6 }}>

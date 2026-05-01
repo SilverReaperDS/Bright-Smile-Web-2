@@ -14,8 +14,14 @@ import {
   Divider,
   Menu,
   MenuItem,
+  Container,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
+import LocalPhoneIcon from '@mui/icons-material/LocalPhone';
+import PlaceIcon from '@mui/icons-material/Place';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import styles from './header.styles';
 import { getMe } from '../../services/api';
@@ -25,7 +31,8 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [username, setUsername] = useState(null);
   const [role, setRole] = useState(null);
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [servicesAnchorEl, setServicesAnchorEl] = useState(null);
+  const [accountAnchorEl, setAccountAnchorEl] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -62,8 +69,10 @@ export default function Header() {
     navigate('/login');
   };
 
-  const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
-  const handleMenuClose = () => setAnchorEl(null);
+  const handleServicesMenuOpen = (event) => setServicesAnchorEl(event.currentTarget);
+  const handleServicesMenuClose = () => setServicesAnchorEl(null);
+  const handleAccountMenuOpen = (event) => setAccountAnchorEl(event.currentTarget);
+  const handleAccountMenuClose = () => setAccountAnchorEl(null);
 
   const navLinks = [
     { label: 'Home', path: '/' },
@@ -78,53 +87,87 @@ export default function Header() {
     },
     { label: 'Gallery', path: '/gallery' },
     { label: 'Testimonials', path: '/testimonials' },
-    { label: 'Book appointment', path: '/book-appointment' },
     { label: 'Contact', path: '/contact' },
   ];
 
   return (
     <>
       <AppBar position="fixed" elevation={scrolled ? 4 : 0} sx={styles.appBar(scrolled)}>
-        <Toolbar sx={styles.toolbar}>
-          <Box sx={{ flex: 1 }}>
+        <Box sx={styles.topBar}>
+          <Container maxWidth="lg" sx={styles.topBarInner}>
+            <Box sx={styles.topBarGroup}>
+              <Box sx={styles.topBarItem}>
+                <LocalPhoneIcon sx={styles.topBarIcon} />
+                <Box
+                  component="a"
+                  href="tel:+970000000000"
+                  sx={styles.topBarLink}
+                  aria-label="Call BrightSmile"
+                >
+                  +970 00 000 0000
+                </Box>
+              </Box>
+              <Box sx={styles.topBarItem}>
+                <PlaceIcon sx={styles.topBarIcon} />
+                <Box component="span" sx={styles.topBarText}>
+                  Nablus
+                </Box>
+              </Box>
+            </Box>
+            <Box sx={styles.topBarGroupRight}>
+              <Box sx={styles.topBarItem}>
+                <AccessTimeIcon sx={styles.topBarIcon} />
+                <Box component="span" sx={styles.topBarText}>
+                  Sat–Thu 9:00–18:00
+                </Box>
+              </Box>
+            </Box>
+          </Container>
+        </Box>
+
+        <Toolbar disableGutters sx={styles.toolbar}>
+          <Container maxWidth="lg" sx={styles.toolbarInner}>
+            <Box sx={styles.brandBox}>
             <Typography
               variant="h6"
               component={Link}
               to="/"
               sx={styles.logo}
+              aria-label="BrightSmile home"
             >
+              <span className="logo-dot" aria-hidden="true" />
               BrightSmile
             </Typography>
-          </Box>
+            </Box>
 
-          <Box sx={styles.navLinks}>
+            <Box sx={styles.navLinks}>
             {navLinks.map(({ label, path, children }) =>
               children ? (
-                <>
+                <React.Fragment key={label}>
                   <Button
                     color="inherit"
-                    onClick={handleMenuOpen}
+                    onClick={handleServicesMenuOpen}
                     sx={styles.navButton(false)}
                   >
                     {label}
                   </Button>
                   <Menu
-                    anchorEl={anchorEl}
-                    open={Boolean(anchorEl)}
-                    onClose={handleMenuClose}
+                    anchorEl={servicesAnchorEl}
+                    open={Boolean(servicesAnchorEl)}
+                    onClose={handleServicesMenuClose}
                   >
                     {children.map(({ label, path }) => (
                       <MenuItem
                         key={path}
                         component={Link}
                         to={path}
-                        onClick={handleMenuClose}
+                        onClick={handleServicesMenuClose}
                       >
                         {label}
                       </MenuItem>
                     ))}
                   </Menu>
-                </>
+                </React.Fragment>
               ) : (
                 <Button
                   key={path}
@@ -137,77 +180,122 @@ export default function Header() {
                 </Button>
               )
             )}
-          </Box>
+            </Box>
 
-          <Box sx={styles.authBox}>
-            {username ? (
-              <>
-                <Typography component="span" variant="body2" sx={styles.greeting}>
-                  Hi, {username}
-                </Typography>
-                {role === 'admin' && (
-                  <Button component={Link} to="/dashboard" color="inherit" sx={{ fontWeight: 600 }}>
-                    Dashboard
-                  </Button>
-                )}
-                {(role === 'patient' || role === 'staff') && (
-                  <Button component={Link} to="/my-dashboard" color="inherit" sx={{ fontWeight: 600 }}>
-                    My dashboard
-                  </Button>
-                )}
-                <Button onClick={handleLogout} color="inherit">
-                  Logout
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button component={Link} to="/login" color="inherit">
+            <Box sx={styles.actions}>
+              <Button component={Link} to="/book-appointment" sx={styles.ctaButton}>
+                Book appointment
+              </Button>
+
+              {username ? (
+                <>
+                  <IconButton
+                    aria-label="Account menu"
+                    onClick={handleAccountMenuOpen}
+                    sx={styles.accountButton}
+                  >
+                    <AccountCircleIcon />
+                  </IconButton>
+                  <Menu
+                    anchorEl={accountAnchorEl}
+                    open={Boolean(accountAnchorEl)}
+                    onClose={handleAccountMenuClose}
+                  >
+                    <MenuItem disabled sx={styles.accountMenuHeader}>
+                      Signed in as <strong style={{ marginLeft: 6 }}>{username}</strong>
+                    </MenuItem>
+                    <Divider />
+                    {role === 'admin' && (
+                      <MenuItem
+                        component={Link}
+                        to="/dashboard"
+                        onClick={handleAccountMenuClose}
+                      >
+                        Dashboard
+                      </MenuItem>
+                    )}
+                    {(role === 'patient' || role === 'staff') && (
+                      <MenuItem
+                        component={Link}
+                        to="/my-dashboard"
+                        onClick={handleAccountMenuClose}
+                      >
+                        My dashboard
+                      </MenuItem>
+                    )}
+                    <MenuItem
+                      onClick={() => {
+                        handleAccountMenuClose();
+                        handleLogout();
+                      }}
+                    >
+                      Logout
+                    </MenuItem>
+                  </Menu>
+                </>
+              ) : (
+                <Button component={Link} to="/login" sx={styles.authButton}>
                   Login
                 </Button>
-                <Button component={Link} to="/register" color="inherit">
-                  Register
-                </Button>
-              </>
-            )}
-          </Box>
+              )}
+            </Box>
 
-          <IconButton
-            edge="end"
-            color="inherit"
-            aria-label="menu"
-            onClick={() => setMenuOpen(true)}
-            sx={{ display: { md: 'none' } }}
-          >
-            <MenuIcon />
-          </IconButton>
+            <IconButton
+              edge="end"
+              aria-label="Open menu"
+              onClick={() => setMenuOpen(true)}
+              sx={styles.mobileMenuButton}
+            >
+              <MenuIcon />
+            </IconButton>
+          </Container>
         </Toolbar>
       </AppBar>
 
-      <Drawer anchor="right" open={menuOpen} onClose={() => setMenuOpen(false)}>
-        <Box sx={styles.drawerBox}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Menu
-          </Typography>
-          <List>
+      <Drawer
+        anchor="right"
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        PaperProps={{ sx: styles.drawerPaper }}
+      >
+        <Box sx={styles.drawerHeader}>
+          <Box sx={styles.drawerBrand}>
+            <span style={styles.drawerBrandDot} />
+            BrightSmile
+          </Box>
+          <IconButton
+            aria-label="Close menu"
+            onClick={() => setMenuOpen(false)}
+            sx={styles.drawerClose}
+            size="small"
+          >
+            <CloseIcon />
+          </IconButton>
+        </Box>
+
+        <Box sx={styles.drawerBody}>
+          <Typography sx={styles.drawerSectionLabel}>Navigate</Typography>
+          <List disablePadding>
             {navLinks.map(({ label, path, children }) =>
               children ? (
-                <>
-                  <ListItem>
+                <React.Fragment key={label}>
+                  <ListItem sx={{ ...styles.drawerItem, opacity: 0.75 }} disabled>
                     <ListItemText primary={label} />
                   </ListItem>
-                  {children.map(({ label, path }) => (
+                  {children.map((child) => (
                     <ListItem
                       button
-                      key={path}
+                      key={child.path}
                       component={Link}
-                      to={path}
-                      selected={isActive(path)}
-                      sx={{ pl: 4 }}
+                      to={child.path}
+                      selected={isActive(child.path)}
+                      onClick={() => setMenuOpen(false)}
+                      sx={styles.drawerChildItem}
                     >
-                      <ListItemText primary={label} />
+                      <ListItemText primary={child.label} />
                     </ListItem>
                   ))}
-                </>
+                </React.Fragment>
               ) : (
                 <ListItem
                   button
@@ -215,64 +303,94 @@ export default function Header() {
                   component={Link}
                   to={path}
                   selected={isActive(path)}
+                  onClick={() => setMenuOpen(false)}
+                  sx={styles.drawerItem}
                 >
                   <ListItemText primary={label} />
                 </ListItem>
               )
             )}
           </List>
+
           <Divider sx={styles.drawerDivider} />
-          {username ? (
-            <>
-              <Typography sx={{ mb: 1 }}>Hi, {username}</Typography>
-              {role === 'admin' && (
+
+          <Box sx={styles.drawerFooter}>
+            <Button
+              component={Link}
+              to="/book-appointment"
+              fullWidth
+              sx={styles.drawerPrimaryButton}
+              onClick={() => setMenuOpen(false)}
+            >
+              Book appointment
+            </Button>
+            {username ? (
+              <>
+                <Typography sx={styles.drawerGreeting}>
+                  Hi, <strong>{username}</strong>
+                </Typography>
+                {role === 'admin' && (
+                  <Button
+                    component={Link}
+                    to="/dashboard"
+                    fullWidth
+                    sx={styles.drawerPrimaryButton}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Button>
+                )}
+                {(role === 'patient' || role === 'staff') && (
+                  <Button
+                    component={Link}
+                    to="/my-dashboard"
+                    fullWidth
+                    sx={styles.drawerPrimaryButton}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    My dashboard
+                  </Button>
+                )}
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  onClick={() => {
+                    handleLogout();
+                    setMenuOpen(false);
+                  }}
+                  sx={styles.drawerSecondaryButton}
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
                 <Button
                   component={Link}
-                  to="/dashboard"
-                  variant="contained"
+                  to="/login"
                   fullWidth
-                  sx={{ mb: 1 }}
+                  sx={styles.drawerPrimaryButton}
                   onClick={() => setMenuOpen(false)}
                 >
-                  Dashboard
+                  Login
                 </Button>
-              )}
-              {(role === 'patient' || role === 'staff') && (
                 <Button
                   component={Link}
-                  to="/my-dashboard"
-                  variant="contained"
+                  to="/register"
+                  variant="outlined"
                   fullWidth
-                  sx={{ mb: 1 }}
+                  sx={styles.drawerSecondaryButton}
                   onClick={() => setMenuOpen(false)}
                 >
-                  My dashboard
+                  Register
                 </Button>
-              )}
-              <Button variant="outlined" fullWidth onClick={handleLogout}>
-                Logout
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                component={Link}
-                to="/login"
-                variant="contained"
-                fullWidth
-                sx={styles.drawerLoginButton}
-              >
-                Login
-              </Button>
-              <Button component={Link} to="/register" fullWidth>
-                Register
-              </Button>
-            </>
-          )}
+              </>
+            )}
+          </Box>
         </Box>
       </Drawer>
 
-      <Toolbar />
+      <Box sx={styles.offset} />
     </>
   );
 }

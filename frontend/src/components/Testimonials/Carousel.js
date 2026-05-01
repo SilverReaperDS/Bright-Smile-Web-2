@@ -1,7 +1,7 @@
-// src/components/Carousel/Carousel.js
+// src/components/Testimonials/Carousel.js
 import React, { useRef, useState, useEffect } from 'react';
-import { Box, IconButton, Stack } from '@mui/material';
-import { ArrowBackIos, ArrowForwardIos } from '@mui/icons-material';
+import { Box, IconButton } from '@mui/material';
+import { ArrowBackIosNew, ArrowForwardIos } from '@mui/icons-material';
 import useInterval from '../../hooks/useInterval';
 import styles from './carousel.styles';
 
@@ -10,6 +10,8 @@ export default function Carousel({
   interval = 4000,
   autoPlay = true,
   pauseOnHover = true,
+  showArrows = true,
+  showDots = true,
   className = '',
 }) {
   const trackRef = useRef(null);
@@ -18,8 +20,9 @@ export default function Carousel({
   const items = React.Children.toArray(children);
   const len = items.length;
 
-  const next = () => setIndex((i) => (i + 1) % Math.max(len, 1));
-  const prev = () => setIndex((i) => (i - 1 + len) % len);
+  const goTo = (i) => setIndex(((i % len) + len) % len);
+  const next = () => goTo(index + 1);
+  const prev = () => goTo(index - 1);
 
   useInterval(() => {
     if (len > 1 && !hovering) next();
@@ -42,23 +45,51 @@ export default function Carousel({
       sx={styles.root}
       aria-roledescription="carousel"
     >
-      <Box ref={trackRef} sx={styles.track(len)}>
-        {items.map((child, i) => (
-          <Box key={i} sx={styles.slide} aria-hidden={i !== index}>
-            {child}
+      <Box sx={styles.viewport}>
+        <Box sx={styles.viewportInner}>
+          <Box ref={trackRef} sx={styles.track(len)}>
+            {items.map((child, i) => (
+              <Box key={i} sx={styles.slide} aria-hidden={i !== index}>
+                {child}
+              </Box>
+            ))}
           </Box>
-        ))}
+
+          {showArrows && len > 1 && (
+            <>
+              <IconButton
+                onClick={prev}
+                aria-label="Previous slide"
+                sx={{ ...styles.arrow, ...styles.arrowLeft }}
+              >
+                <ArrowBackIosNew fontSize="small" />
+              </IconButton>
+              <IconButton
+                onClick={next}
+                aria-label="Next slide"
+                sx={{ ...styles.arrow, ...styles.arrowRight }}
+              >
+                <ArrowForwardIos fontSize="small" />
+              </IconButton>
+            </>
+          )}
+        </Box>
       </Box>
 
-      {len > 1 && (
-        <Stack direction="row" justifyContent="center" spacing={2} sx={styles.controls}>
-          <IconButton onClick={prev} aria-label="Previous slide">
-            <ArrowBackIos fontSize="small" />
-          </IconButton>
-          <IconButton onClick={next} aria-label="Next slide">
-            <ArrowForwardIos fontSize="small" />
-          </IconButton>
-        </Stack>
+      {showDots && len > 1 && (
+        <Box sx={styles.controls} role="tablist" aria-label="Slide indicators">
+          {items.map((_, i) => (
+            <Box
+              key={i}
+              component="button"
+              role="tab"
+              aria-label={`Go to slide ${i + 1}`}
+              aria-selected={i === index}
+              onClick={() => goTo(i)}
+              sx={styles.dot(i === index)}
+            />
+          ))}
+        </Box>
       )}
     </Box>
   );

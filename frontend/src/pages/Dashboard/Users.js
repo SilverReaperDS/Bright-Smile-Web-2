@@ -18,6 +18,7 @@ import {
   IconButton,
   Select,
   MenuItem,
+  CircularProgress,
   Chip,
 } from "@mui/material";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
@@ -32,6 +33,7 @@ import {
   patchAdminUserActive,
 } from "../../services/api";
 import PasswordField from "../../components/PasswordField";
+import dashStyles from "./dashboard.styles";
 
 export default function Users() {
   const [allUsers, setAllUsers] = useState([]);
@@ -123,7 +125,12 @@ export default function Users() {
   };
 
   const removeStaff = async (member) => {
-    if (!window.confirm(`Remove staff account "${member.username}"?`)) return;
+    if (
+      !window.confirm(`
+        Remove staff account "${member.username}"? Assigned appointments will become unassigned.`)
+    ) {
+      return;
+    }
 
     setError("");
     try {
@@ -163,34 +170,64 @@ export default function Users() {
     }
   };
 
-  if (loading) return <Typography>Loading…</Typography>;
+  if (loading) {
+    return (
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, p: 3 }}>
+        <CircularProgress size={28} sx={{ color: "#0db1ad" }} />
+        <Typography sx={{ color: "#5a6b6b" }}>Loading…</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Users &amp; staff
-      </Typography>
+      <Box sx={dashStyles.pageHeader}>
+        <Box>
+          <Typography component="h1" sx={dashStyles.pageTitle}>
+            Users &amp; staff
+          </Typography>
+          <Typography sx={dashStyles.pageSubtitle}>
+            Manage your clinic team and registered patients.
+          </Typography>
+        </Box>
+      </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
+        <Alert
+          severity="error"
+          sx={dashStyles.alert}
+          onClose={() => setError("")}
+        >
           {error}
         </Alert>
       )}
 
-      <Typography variant="h6" gutterBottom sx={{ mt: 1 }}>
-        Staff team
-      </Typography>
-
+      <Typography sx={dashStyles.sectionTitle}>Staff team</Typography>
       <Typography color="text.secondary" sx={{ mb: 2 }}>
         Add clinic staff here. They can log in with the credentials you set.
       </Typography>
 
-      <Paper sx={{ p: 2, mb: 4 }} component="form" onSubmit={handleAddStaff}>
-        <Typography variant="subtitle2" gutterBottom>
+      <Paper
+        elevation={0}
+        sx={{ ...dashStyles.card, mb: 4 }}
+        component="form"
+        onSubmit={handleAddStaff}
+      >
+        <Typography
+          variant="subtitle2"
+          sx={{ fontWeight: 700, color: "#0f2a2a", mb: 2 }}
+        >
           Add staff member
         </Typography>
 
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 2,
+            alignItems: "flex-start",
+          }}
+        >
           <TextField
             size="small"
             label="Username"
@@ -224,132 +261,142 @@ export default function Users() {
             helperText="8+ chars, number & special character"
             autoComplete="new-password"
           />
-          <Button type="submit" variant="contained" disabled={saving}>
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={saving}
+            sx={{ mt: 0.5, ...dashStyles.primaryBtn }}
+          >
             Add staff
           </Button>
         </Box>
       </Paper>
 
-      <Table size="small" sx={{ mb: 4 }}>
-        <TableHead>
-          <TableRow>
-            <TableCell>Joined</TableCell>
-            <TableCell>Username</TableCell>
-            <TableCell>Email</TableCell>
-            <TableCell>Phone</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell align="right">Manage</TableCell>
-          </TableRow>
-        </TableHead>
-
-        <TableBody>
-          {staff.length === 0 && (
+      <Paper elevation={0} sx={{ ...dashStyles.card, mb: 4 }}>
+        <Table size="small">
+          <TableHead>
             <TableRow>
-              <TableCell colSpan={6}>No staff yet.</TableCell>
-            </TableRow>
-          )}
-
-          {staff.map((s) => (
-            <TableRow key={s.id}>
-              <TableCell>{new Date(s.createdAt).toLocaleString()}</TableCell>
-              <TableCell>{s.username}</TableCell>
-              <TableCell>{s.email}</TableCell>
-              <TableCell>{s.phone || "—"}</TableCell>
-              <TableCell>
-                <Chip
-                  size="small"
-                  label={s.isActive ? "Active" : "Deactivated"}
-                  color={s.isActive ? "success" : "default"}
-                />
-              </TableCell>
-              <TableCell align="right">
-                <IconButton
-                  size="small"
-                  onClick={() => openEdit(s)}
-                  color="primary"
-                >
-                  <EditOutlinedIcon />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  onClick={() => removeStaff(s)}
-                  color="error"
-                >
-                  <DeleteOutlineIcon />
-                </IconButton>
+              <TableCell sx={dashStyles.tableHeaderCell}>Joined</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Username</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Email</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Phone</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Status</TableCell>
+              <TableCell align="right" sx={dashStyles.tableHeaderCell}>
+                Manage
               </TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHead>
+          <TableBody>
+            {staff.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6}>
+                  <Typography color="text.secondary">No staff yet.</Typography>
+                </TableCell>
+              </TableRow>
+            )}
+            {staff.map((s) => (
+              <TableRow key={s.id} hover>
+                <TableCell>{new Date(s.createdAt).toLocaleString()}</TableCell>
+                <TableCell>{s.username}</TableCell>
+                <TableCell>{s.email}</TableCell>
+                <TableCell>{s.phone || "—"}</TableCell>
+                <TableCell>
+                  <Chip
+                    size="small"
+                    label={s.isActive ? "Active" : "Deactivated"}
+                    color={s.isActive ? "success" : "default"}
+                  />
+                </TableCell>
+                <TableCell align="right">
+                  <IconButton
+                    aria-label="Edit"
+                    size="small"
+                    onClick={() => openEdit(s)}
+                    color="primary"
+                  >
+                    <EditOutlinedIcon />
+                  </IconButton>
+                  <IconButton
+                    aria-label="Delete"
+                    size="small"
+                    onClick={() => removeStaff(s)}
+                    color="error"
+                  >
+                    <DeleteOutlineIcon />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Paper>
 
-      <Typography variant="h6" gutterBottom>
-        All accounts
-      </Typography>
-
+      <Typography sx={dashStyles.sectionTitle}>All accounts</Typography>
       <Typography color="text.secondary" sx={{ mb: 2 }}>
         Every registered user. You can assign roles and activate/deactivate
         accounts.
       </Typography>
 
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>Joined</TableCell>
-            <TableCell>Username</TableCell>
-            <TableCell>Email</TableCell>
-            <TableCell>Phone</TableCell>
-            <TableCell>Role</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell>Action</TableCell>
-          </TableRow>
-        </TableHead>
-
-        <TableBody>
-          {allUsers.length === 0 && (
+      <Paper elevation={0} sx={dashStyles.card}>
+        <Table size="small">
+          <TableHead>
             <TableRow>
-              <TableCell colSpan={7}>No users.</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Joined</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Username</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Email</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Phone</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Role</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Status</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Action</TableCell>
             </TableRow>
-          )}
-
-          {allUsers.map((u) => (
-            <TableRow key={u.id}>
-              <TableCell>{new Date(u.createdAt).toLocaleString()}</TableCell>
-              <TableCell>{u.username}</TableCell>
-              <TableCell>{u.email}</TableCell>
-              <TableCell>{u.phone || "—"}</TableCell>
-              <TableCell>
-                <Select
-                  size="small"
-                  value={u.role}
-                  onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                >
-                  <MenuItem value="patient">patient</MenuItem>
-                  <MenuItem value="staff">staff</MenuItem>
-                  <MenuItem value="admin">admin</MenuItem>
-                </Select>
-              </TableCell>
-              <TableCell>
-                <Chip
-                  size="small"
-                  label={u.isActive ? "Active" : "Deactivated"}
-                  color={u.isActive ? "success" : "default"}
-                />
-              </TableCell>
-              <TableCell>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  color={u.isActive ? "error" : "success"}
-                  onClick={() => handleToggleActive(u)}
-                >
-                  {u.isActive ? "Deactivate" : "Activate"}
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHead>
+          <TableBody>
+            {allUsers.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7}>
+                  <Typography color="text.secondary">No users.</Typography>
+                </TableCell>
+              </TableRow>
+            )}
+            {allUsers.map((u) => (
+              <TableRow key={u.id} hover>
+                <TableCell>{new Date(u.createdAt).toLocaleString()}</TableCell>
+                <TableCell>{u.username}</TableCell>
+                <TableCell>{u.email}</TableCell>
+                <TableCell>{u.phone || "—"}</TableCell>
+                <TableCell>
+                  <Select
+                    size="small"
+                    value={u.role}
+                    onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                  >
+                    <MenuItem value="patient">patient</MenuItem>
+                    <MenuItem value="staff">staff</MenuItem>
+                    <MenuItem value="admin">admin</MenuItem>
+                  </Select>
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    size="small"
+                    label={u.isActive ? "Active" : "Deactivated"}
+                    color={u.isActive ? "success" : "default"}
+                  />
+                </TableCell>
+                <TableCell>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color={u.isActive ? "error" : "success"}
+                    onClick={() => handleToggleActive(u)}
+                  >
+                    {u.isActive ? "Deactivate" : "Activate"}
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Paper>
 
       <Dialog
         open={Boolean(editOpen)}
@@ -394,7 +441,12 @@ export default function Users() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditOpen(null)}>Cancel</Button>
-          <Button variant="contained" onClick={submitEdit} disabled={saving}>
+          <Button
+            variant="contained"
+            onClick={submitEdit}
+            disabled={saving}
+            sx={dashStyles.primaryBtn}
+          >
             Save
           </Button>
         </DialogActions>

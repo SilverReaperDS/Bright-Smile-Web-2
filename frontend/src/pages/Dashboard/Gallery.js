@@ -17,11 +17,14 @@ import {
   DialogContent,
   DialogActions,
   Stack,
+  Chip,
+  CircularProgress,
 } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
 import {
   fetchAdminGallery,
   postAdminGalleryCase,
@@ -30,17 +33,45 @@ import {
   patchAdminGalleryCase,
   patchAdminGalleryReorder,
 } from '../../services/api';
+import dashStyles from './dashboard.styles';
 
 function FilePick({ label, file, onChange, inputKey }) {
   return (
     <Box>
-      <Typography variant="body2" sx={{ mb: 0.5 }}>
+      <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 600, color: '#0f2a2a' }}>
         {label}
       </Typography>
-      <Button variant="outlined" component="label" size="small">
-        {file ? file.name : 'Choose image…'}
+      <Button
+        variant="outlined"
+        component="label"
+        size="small"
+        startIcon={<CloudUploadOutlinedIcon />}
+        sx={{
+          ...dashStyles.outlineBtn,
+          px: 2,
+        }}
+      >
+        {file ? 'Change file' : 'Choose image…'}
         <input key={inputKey} type="file" accept="image/jpeg,image/png,image/gif,image/webp" hidden onChange={onChange} />
       </Button>
+      {file && (
+        <Box sx={{ mt: 1 }}>
+          <Chip
+            size="small"
+            label={file.name}
+            sx={{
+              backgroundColor: '#e6faf9',
+              color: '#088a87',
+              fontWeight: 600,
+              maxWidth: 220,
+              '& .MuiChip-label': {
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              },
+            }}
+          />
+        </Box>
+      )}
     </Box>
   );
 }
@@ -221,29 +252,39 @@ export default function Gallery() {
   const canSubmitPair = (beforeFile && afterFile) || (urlBefore.trim() && urlAfter.trim());
 
   if (loading && cases.length === 0) {
-    return <Typography>Loading gallery…</Typography>;
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 3 }}>
+        <CircularProgress size={28} sx={{ color: '#0db1ad' }} />
+        <Typography sx={{ color: '#5a6b6b' }}>Loading gallery…</Typography>
+      </Box>
+    );
   }
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Smile gallery (before / after)
-      </Typography>
-      <Typography color="text.secondary" sx={{ mb: 2 }}>
-        Each entry is one case: exactly two images (before and after). Upload from your computer or paste two URLs.
-        Reorder cases with the arrows. The public page shows before and after side by side.
-      </Typography>
+      <Box sx={dashStyles.pageHeader}>
+        <Box>
+          <Typography component="h1" sx={dashStyles.pageTitle}>
+            Smile Gallery
+          </Typography>
+          <Typography sx={dashStyles.pageSubtitle}>
+            Each entry is one case: exactly two images (before and after). Upload from your computer or paste two URLs.
+            Reorder cases with the arrows. The public page shows before and after side by side.
+          </Typography>
+        </Box>
+      </Box>
+
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+        <Alert severity="error" sx={dashStyles.alert} onClose={() => setError('')}>
           {error}
         </Alert>
       )}
 
-      <Paper sx={{ p: 2, mb: 3 }} component="form" onSubmit={handleAddPair}>
-        <Typography variant="subtitle1" gutterBottom>
+      <Paper elevation={0} sx={{ ...dashStyles.card, mb: 3 }} component="form" onSubmit={handleAddPair}>
+        <Typography sx={{ ...dashStyles.sectionTitle, mb: 2 }}>
           Add one case (before + after)
         </Typography>
-        <Stack spacing={2} sx={{ maxWidth: 520 }}>
+        <Stack spacing={2} sx={{ maxWidth: 560 }}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <FilePick
               label="Before photo"
@@ -285,86 +326,107 @@ export default function Gallery() {
             rows={2}
           />
           <TextField label="Category (optional)" value={category} onChange={(e) => setCategory(e.target.value)} fullWidth />
-          <Button type="submit" variant="contained" disabled={saving || !canSubmitPair}>
-            Add case
-          </Button>
+          <Box>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={saving || !canSubmitPair}
+              sx={dashStyles.primaryBtn}
+            >
+              Add case
+            </Button>
+          </Box>
         </Stack>
       </Paper>
 
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell width={72}>Order</TableCell>
-            <TableCell>Before</TableCell>
-            <TableCell>After</TableCell>
-            <TableCell>Title</TableCell>
-            <TableCell>Category</TableCell>
-            <TableCell align="right">Actions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {cases.length === 0 && (
+      <Paper elevation={0} sx={dashStyles.card}>
+        <Table size="small">
+          <TableHead>
             <TableRow>
-              <TableCell colSpan={6}>
-                <Typography color="text.secondary">No cases yet.</Typography>
-              </TableCell>
+              <TableCell width={72} sx={dashStyles.tableHeaderCell}>Order</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Before</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>After</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Title</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Category</TableCell>
+              <TableCell align="right" sx={dashStyles.tableHeaderCell}>Actions</TableCell>
             </TableRow>
-          )}
-          {cases.map((row, index) => (
-            <TableRow key={row.id}>
-              <TableCell>
-                <Stack direction="row">
-                  <IconButton size="small" aria-label="Move up" disabled={index === 0} onClick={() => moveItem(index, -1)}>
-                    <KeyboardArrowUpIcon fontSize="small" />
+          </TableHead>
+          <TableBody>
+            {cases.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6}>
+                  <Typography color="text.secondary">No cases yet.</Typography>
+                </TableCell>
+              </TableRow>
+            )}
+            {cases.map((row, index) => (
+              <TableRow key={row.id} hover>
+                <TableCell>
+                  <Stack direction="row">
+                    <IconButton size="small" aria-label="Move up" disabled={index === 0} onClick={() => moveItem(index, -1)}>
+                      <KeyboardArrowUpIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      aria-label="Move down"
+                      disabled={index === cases.length - 1}
+                      onClick={() => moveItem(index, 1)}
+                    >
+                      <KeyboardArrowDownIcon fontSize="small" />
+                    </IconButton>
+                  </Stack>
+                </TableCell>
+                <TableCell>
+                  {row.beforeImageUrl ? (
+                    <Box
+                      component="img"
+                      src={row.beforeImageUrl}
+                      alt=""
+                      sx={{
+                        width: 84,
+                        height: 60,
+                        objectFit: 'cover',
+                        borderRadius: 2,
+                        boxShadow: '0 2px 8px rgba(13,42,42,0.12)',
+                      }}
+                    />
+                  ) : (
+                    '—'
+                  )}
+                </TableCell>
+                <TableCell>
+                  {row.afterImageUrl ? (
+                    <Box
+                      component="img"
+                      src={row.afterImageUrl}
+                      alt=""
+                      sx={{
+                        width: 84,
+                        height: 60,
+                        objectFit: 'cover',
+                        borderRadius: 2,
+                        boxShadow: '0 2px 8px rgba(13,42,42,0.12)',
+                      }}
+                    />
+                  ) : (
+                    '—'
+                  )}
+                </TableCell>
+                <TableCell>{row.title || '—'}</TableCell>
+                <TableCell>{row.category || '—'}</TableCell>
+                <TableCell align="right">
+                  <IconButton aria-label="Edit" size="small" onClick={() => openEdit(row)}>
+                    <EditOutlinedIcon fontSize="small" />
                   </IconButton>
-                  <IconButton
-                    size="small"
-                    aria-label="Move down"
-                    disabled={index === cases.length - 1}
-                    onClick={() => moveItem(index, 1)}
-                  >
-                    <KeyboardArrowDownIcon fontSize="small" />
+                  <IconButton aria-label="Delete" onClick={() => remove(row.id)} size="small" color="error">
+                    <DeleteOutlineIcon />
                   </IconButton>
-                </Stack>
-              </TableCell>
-              <TableCell>
-                {row.beforeImageUrl ? (
-                  <Box
-                    component="img"
-                    src={row.beforeImageUrl}
-                    alt=""
-                    sx={{ width: 80, height: 56, objectFit: 'cover', borderRadius: 1 }}
-                  />
-                ) : (
-                  '—'
-                )}
-              </TableCell>
-              <TableCell>
-                {row.afterImageUrl ? (
-                  <Box
-                    component="img"
-                    src={row.afterImageUrl}
-                    alt=""
-                    sx={{ width: 80, height: 56, objectFit: 'cover', borderRadius: 1 }}
-                  />
-                ) : (
-                  '—'
-                )}
-              </TableCell>
-              <TableCell>{row.title || '—'}</TableCell>
-              <TableCell>{row.category || '—'}</TableCell>
-              <TableCell align="right">
-                <IconButton aria-label="Edit" size="small" onClick={() => openEdit(row)}>
-                  <EditOutlinedIcon fontSize="small" />
-                </IconButton>
-                <IconButton aria-label="Delete" onClick={() => remove(row.id)} size="small" color="error">
-                  <DeleteOutlineIcon />
-                </IconButton>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Paper>
 
       <Dialog open={editOpen} onClose={() => !saving && setEditOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Edit case</DialogTitle>
@@ -404,7 +466,7 @@ export default function Gallery() {
           <Button onClick={() => setEditOpen(false)} disabled={saving}>
             Cancel
           </Button>
-          <Button onClick={saveEdit} variant="contained" disabled={saving}>
+          <Button onClick={saveEdit} variant="contained" disabled={saving} sx={dashStyles.primaryBtn}>
             Save
           </Button>
         </DialogActions>

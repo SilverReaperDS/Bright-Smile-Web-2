@@ -2,14 +2,11 @@
 
 const styles = {
   card: {
-    height: '100%',
-    border: '2px solid #ccc',
+    width: '100%',
+    border: '1px solid rgba(8, 38, 38, 0.14)',
     borderRadius: 2,
     boxShadow: 'none',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    p: 1.5,
+    p: { xs: 2, sm: 2.5 },
   },
   stars: {
     color: '#f5a623',

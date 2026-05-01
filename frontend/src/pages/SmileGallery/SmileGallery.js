@@ -19,14 +19,26 @@ export default function SmileGallery() {
 
   return (
     <Box sx={styles.section}>
-      <Container maxWidth="lg">
-        <Typography variant="h4" component="h1" sx={styles.heading}>
-          Smile Gallery
-        </Typography>
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+        <Box sx={styles.headerWrap}>
+          <Box component="span" sx={styles.eyebrow}>
+            Real Patients · Real Results
+          </Box>
+          <Typography variant="h4" component="h1" sx={styles.heading}>
+            Smile Gallery
+          </Typography>
+          <Typography sx={styles.subheading}>
+            Explore genuine before-and-after transformations from our patients.
+            Every smile tells a story of care, craftsmanship, and confidence.
+          </Typography>
+        </Box>
 
         {loading && (
           <Box sx={styles.loading}>
-            <CircularProgress />
+            <CircularProgress color="inherit" />
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              Loading smile transformations…
+            </Typography>
           </Box>
         )}
 
@@ -46,9 +58,16 @@ export default function SmileGallery() {
 
         {!loading && !error && data?.length > 0 && <GalleryViewer cases={data} />}
         {!loading && !error && (!data || data.length === 0) && (
-          <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-            No smile cases to show yet.
-          </Typography>
+          <Box sx={styles.emptyState}>
+            <Box sx={styles.emptyIcon}>🦷</Box>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f2a2a', mb: 1 }}>
+              No cases yet
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Our smile gallery is being curated. Check back soon to see
+              inspiring transformations.
+            </Typography>
+          </Box>
         )}
       </Container>
     </Box>

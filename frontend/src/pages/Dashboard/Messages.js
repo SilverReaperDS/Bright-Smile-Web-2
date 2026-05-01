@@ -14,12 +14,14 @@ import {
   CircularProgress,
 } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import SendOutlinedIcon from '@mui/icons-material/SendOutlined';
 import {
   fetchAdminThreadSummaries,
   fetchAdminThreadMessages,
   postAdminThreadReply,
   deleteAdminMessage,
 } from '../../services/api';
+import dashStyles from './dashboard.styles';
 
 function formatWhen(iso) {
   if (!iso) return '—';
@@ -107,9 +109,9 @@ export default function Messages() {
 
   if (loadingThreads) {
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <CircularProgress size={28} />
-        <Typography>Loading conversations…</Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 3 }}>
+        <CircularProgress size={28} sx={{ color: '#0db1ad' }} />
+        <Typography sx={{ color: '#5a6b6b' }}>Loading conversations…</Typography>
       </Box>
     );
   }
@@ -118,90 +120,176 @@ export default function Messages() {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Contact messages
-      </Typography>
-      <Typography color="text.secondary" sx={{ mb: 2 }}>
-        Open a thread to read and reply. Patient messages are marked read when you open the thread.
-      </Typography>
+      <Box sx={dashStyles.pageHeader}>
+        <Box>
+          <Typography component="h1" sx={dashStyles.pageTitle}>
+            Contact messages
+          </Typography>
+          <Typography sx={dashStyles.pageSubtitle}>
+            Open a thread to read and reply. Patient messages are marked read when you open the thread.
+          </Typography>
+        </Box>
+      </Box>
+
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+        <Alert severity="error" sx={dashStyles.alert} onClose={() => setError('')}>
           {error}
         </Alert>
       )}
+
       {threads.length === 0 ? (
-        <Typography color="text.secondary">No messages yet.</Typography>
+        <Paper elevation={0} sx={dashStyles.card}>
+          <Typography color="text.secondary">No messages yet.</Typography>
+        </Paper>
       ) : (
-        <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', md: 'row' }, minHeight: 480 }}>
-          <Paper variant="outlined" sx={{ width: { xs: '100%', md: 300 }, flexShrink: 0 }}>
+        <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', md: 'row' }, minHeight: 520 }}>
+          <Paper
+            elevation={0}
+            sx={{
+              ...dashStyles.card,
+              p: 0,
+              width: { xs: '100%', md: 320 },
+              flexShrink: 0,
+              overflow: 'hidden',
+            }}
+          >
             <List dense disablePadding>
-              {threads.map((t) => (
-                <ListItemButton
-                  key={t.threadId}
-                  selected={t.threadId === selectedId}
-                  onClick={() => setSelectedId(t.threadId)}
-                >
-                  <ListItemText
-                    primary={t.name || t.email || 'Unknown'}
-                    secondary={`${(t.lastPreview || '').slice(0, 48)}${(t.lastPreview || '').length > 48 ? '…' : ''}\n${formatWhen(t.lastAt)}`}
-                    secondaryTypographyProps={{ variant: 'caption', whiteSpace: 'pre-line' }}
-                  />
-                  {t.unreadCount > 0 && (
-                    <Chip size="small" label={t.unreadCount} color="primary" sx={{ ml: 0.5 }} />
-                  )}
-                </ListItemButton>
-              ))}
+              {threads.map((t) => {
+                const isActive = t.threadId === selectedId;
+                return (
+                  <ListItemButton
+                    key={t.threadId}
+                    selected={isActive}
+                    onClick={() => setSelectedId(t.threadId)}
+                    sx={{
+                      borderLeft: isActive ? '3px solid #0db1ad' : '3px solid transparent',
+                      backgroundColor: isActive ? '#e6faf9' : 'transparent',
+                      py: 1.2,
+                      '&.Mui-selected': {
+                        backgroundColor: '#e6faf9',
+                        '&:hover': { backgroundColor: '#d4f4f2' },
+                      },
+                      '&:hover': {
+                        backgroundColor: isActive ? '#d4f4f2' : 'rgba(13,177,173,0.05)',
+                      },
+                    }}
+                  >
+                    <ListItemText
+                      primary={t.name || t.email || 'Unknown'}
+                      secondary={`${(t.lastPreview || '').slice(0, 48)}${(t.lastPreview || '').length > 48 ? '…' : ''}\n${formatWhen(t.lastAt)}`}
+                      primaryTypographyProps={{
+                        fontWeight: isActive ? 700 : 600,
+                        color: '#0f2a2a',
+                        fontSize: '0.92rem',
+                      }}
+                      secondaryTypographyProps={{ variant: 'caption', whiteSpace: 'pre-line', color: '#5a6b6b' }}
+                    />
+                    {t.unreadCount > 0 && (
+                      <Chip
+                        size="small"
+                        label={t.unreadCount}
+                        sx={{
+                          ml: 0.5,
+                          background: 'linear-gradient(135deg, #ff7b6b, #ff5c4d)',
+                          color: '#fff',
+                          fontWeight: 700,
+                        }}
+                      />
+                    )}
+                  </ListItemButton>
+                );
+              })}
             </List>
           </Paper>
 
-          <Paper variant="outlined" sx={{ flex: 1, p: 2, display: 'flex', flexDirection: 'column' }}>
+          <Paper
+            elevation={0}
+            sx={{
+              ...dashStyles.card,
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
             {selected && (
-              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                {selected.name} · {selected.email} · {selected.phone || '—'}
+              <Typography
+                variant="subtitle2"
+                sx={{
+                  mb: 1.5,
+                  color: '#0f2a2a',
+                  fontWeight: 700,
+                  pb: 1.5,
+                  borderBottom: '1px solid rgba(13,177,173,0.10)',
+                }}
+              >
+                {selected.name} ·{' '}
+                <Box component="span" sx={{ color: '#5a6b6b', fontWeight: 500 }}>
+                  {selected.email} · {selected.phone || '—'}
+                </Box>
               </Typography>
             )}
-            <Box sx={{ flex: 1, overflow: 'auto', mb: 2, maxHeight: { xs: 320, md: 'none' } }}>
+            <Box sx={{ flex: 1, overflow: 'auto', mb: 2, maxHeight: { xs: 340, md: 'none' } }}>
               {loadingMessages ? (
-                <CircularProgress size={28} />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, py: 2 }}>
+                  <CircularProgress size={24} sx={{ color: '#0db1ad' }} />
+                  <Typography sx={{ color: '#5a6b6b' }}>Loading messages…</Typography>
+                </Box>
               ) : (
-                messages.map((m) => (
-                  <Box
-                    key={m.id}
-                    sx={{
-                      mb: 1.5,
-                      display: 'flex',
-                      justifyContent: m.senderRole === 'patient' ? 'flex-start' : 'flex-end',
-                      alignItems: 'flex-start',
-                      gap: 0.5,
-                    }}
-                  >
-                    <Paper
-                      elevation={0}
+                messages.map((m) => {
+                  const isPatient = m.senderRole === 'patient';
+                  return (
+                    <Box
+                      key={m.id}
                       sx={{
-                        px: 1.5,
-                        py: 1,
-                        maxWidth: '82%',
-                        bgcolor: m.senderRole === 'patient' ? 'action.hover' : 'primary.main',
-                        color: m.senderRole === 'patient' ? 'text.primary' : 'primary.contrastText',
+                        mb: 1.5,
+                        display: 'flex',
+                        justifyContent: isPatient ? 'flex-start' : 'flex-end',
+                        alignItems: 'flex-start',
+                        gap: 0.5,
                       }}
                     >
-                      <Typography variant="caption" sx={{ opacity: 0.9, display: 'block' }}>
-                        {m.senderRole === 'patient' ? 'Patient' : 'You'} · {formatWhen(m.createdAt)}
-                      </Typography>
-                      <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                        {m.message}
-                      </Typography>
-                    </Paper>
-                    <IconButton
-                      size="small"
-                      aria-label="delete message"
-                      onClick={() => remove(m.id)}
-                      color="error"
-                    >
-                      <DeleteOutlineIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-                ))
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          px: 1.8,
+                          py: 1.2,
+                          maxWidth: '78%',
+                          borderRadius: 3,
+                          background: isPatient
+                            ? '#f4f6f6'
+                            : 'linear-gradient(135deg, #0db1ad, #088a87)',
+                          color: isPatient ? '#0f2a2a' : '#fff',
+                          boxShadow: isPatient
+                            ? '0 2px 6px rgba(13,42,42,0.06)'
+                            : '0 4px 12px rgba(13,177,173,0.25)',
+                        }}
+                      >
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            opacity: isPatient ? 0.7 : 0.9,
+                            display: 'block',
+                            fontWeight: 600,
+                            mb: 0.3,
+                          }}
+                        >
+                          {isPatient ? 'Patient' : 'You'} · {formatWhen(m.createdAt)}
+                        </Typography>
+                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                          {m.message}
+                        </Typography>
+                      </Paper>
+                      <IconButton
+                        size="small"
+                        aria-label="delete message"
+                        onClick={() => remove(m.id)}
+                        color="error"
+                      >
+                        <DeleteOutlineIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  );
+                })
               )}
             </Box>
             <TextField
@@ -212,8 +300,19 @@ export default function Messages() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               disabled={!selectedId || sending}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                },
+              }}
             />
-            <Button sx={{ mt: 1, alignSelf: 'flex-end' }} variant="contained" onClick={send} disabled={sending}>
+            <Button
+              sx={{ mt: 1.5, alignSelf: 'flex-end', ...dashStyles.primaryBtn }}
+              variant="contained"
+              onClick={send}
+              disabled={sending}
+              startIcon={<SendOutlinedIcon />}
+            >
               Send reply
             </Button>
           </Paper>

@@ -1,10 +1,36 @@
 const { Pool } = require("pg");
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  max: 10,
-  idleTimeoutMillis: 30000,
-});
+const hasConnectionString =
+  typeof process.env.DATABASE_URL === 'string' && process.env.DATABASE_URL.trim() !== '';
+
+const hasDiscreteConfig =
+  typeof process.env.DB_HOST === 'string' && process.env.DB_HOST.trim() !== '' &&
+  typeof process.env.DB_USER === 'string' && process.env.DB_USER.trim() !== '' &&
+  typeof process.env.DB_NAME === 'string' && process.env.DB_NAME.trim() !== '';
+
+const poolConfig = hasConnectionString
+  ? {
+      connectionString: process.env.DATABASE_URL,
+      max: 10,
+      idleTimeoutMillis: 30000,
+    }
+  : {
+      host: process.env.DB_HOST,
+      port: Number(process.env.DB_PORT || 5432),
+      user: process.env.DB_USER,
+      password: String(process.env.DB_PASSWORD || ''),
+      database: process.env.DB_NAME,
+      max: 10,
+      idleTimeoutMillis: 30000,
+    };
+
+if (!hasConnectionString && !hasDiscreteConfig) {
+  console.warn(
+    '⚠️ PostgreSQL config is incomplete. Set DATABASE_URL or DB_HOST/DB_USER/DB_PASSWORD/DB_NAME.'
+  );
+}
+
+const pool = new Pool(poolConfig);
 
 pool.on("error", (err) => {
   console.error("Unexpected PostgreSQL client error", err);
@@ -13,6 +39,24 @@ pool.on("error", (err) => {
 async function ensureSchema() {
   const client = await pool.connect();
   try {
+    const { rows: requiredTables } = await client.query(`
+      SELECT table_name
+      FROM information_schema.tables
+      WHERE table_schema = 'public'
+        AND table_name IN ('users', 'appointments', 'messages', 'testimonials', 'gallery_items', 'gallery_cases')
+    `);
+
+    const existingTables = new Set(requiredTables.map((row) => row.table_name));
+    const baseTablesMissing = ['users', 'appointments', 'messages', 'testimonials', 'gallery_items'].some(
+      (tableName) => !existingTables.has(tableName)
+    );
+
+    if (baseTablesMissing) {
+      throw new Error(
+        'Required database tables are missing. Run the schema first: psql -U postgres -d "Bright-Smile-Web-2" -f database/schema.sql'
+      );
+    }
+
     await client.query(`
       ALTER TABLE appointments
       ADD COLUMN IF NOT EXISTS assigned_staff_id UUID REFERENCES users (id) ON DELETE SET NULL;
