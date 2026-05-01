@@ -580,30 +580,59 @@ export async function deleteAdminStaff(id) {
   if (!res.ok) throw new Error(await parseErrorResponse(res));
   return res.json();
 }
-
 export async function patchAdminUserRole(id, body) {
   const res = await fetch(
     `${getApiBase()}/api/admin/users/${encodeURIComponent(id)}/role`,
+
     {
       method: "PATCH",
+
       headers: authHeaders(),
+
       body: JSON.stringify(body),
     },
   );
+
+  if (!res.ok) throw new Error(await parseErrorResponse(res));
+
+  return res.json();
+}
+
+export async function patchAdminUserActive(id, isActive) {
+  const res = await fetch(
+    `${getApiBase()}/api/admin/users/${encodeURIComponent(id)}/active`,
+    {
+      method: "PATCH",
+      headers: {
+        ...authHeaders(),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ isActive }),
+    },
+  );
+
   if (!res.ok) throw new Error(await parseErrorResponse(res));
   return res.json();
 }
+
 export async function downloadAppointmentsCsv() {
   const token = localStorage.getItem("authToken");
+
   const res = await fetch(`${getApiBase()}/api/appointments/export/csv`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
+
   if (!res.ok) throw new Error(await parseErrorResponse(res));
+
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
+
   const a = document.createElement("a");
   a.href = url;
   a.download = "appointments.csv";
+  document.body.appendChild(a); // مهم لبعض المتصفحات
   a.click();
+  a.remove();
+
   URL.revokeObjectURL(url);
 }
