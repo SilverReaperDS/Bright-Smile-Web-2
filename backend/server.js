@@ -29,31 +29,36 @@ const PORT = process.env.PORT || 5001;
 app.use(
   cors({
     origin: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  })
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
 );
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 async function ensureDb() {
-  await pool.query('SELECT 1');
+  await pool.query("SELECT 1");
   await ensureSchema();
 }
 
 async function start() {
   try {
     await ensureDb();
-    console.log('✅ PostgreSQL connected');
+    console.log("✅ PostgreSQL connected");
   } catch (err) {
-    console.error('❌ PostgreSQL connection error:', err.message);
+    console.error("❌ PostgreSQL connection error:", err.message);
   }
   server.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));
 }
 
-app.post('/register', async (req, res) => {
-  const { username: rawUsername, email: rawEmail, password, phone: rawPhone } = req.body;
+app.post("/register", async (req, res) => {
+  const {
+    username: rawUsername,
+    email: rawEmail,
+    password,
+    phone: rawPhone,
+  } = req.body;
   const username = rawUsername?.toLowerCase();
   const email = rawEmail?.toLowerCase();
   const phone = normalizePhone(rawPhone);
@@ -67,11 +72,13 @@ app.post('/register', async (req, res) => {
   }
   try {
     const dup = await pool.query(
-      'SELECT id FROM users WHERE lower(username) = $1 OR lower(email) = $2 LIMIT 1',
-      [username, email]
+      "SELECT id FROM users WHERE lower(username) = $1 OR lower(email) = $2 LIMIT 1",
+      [username, email],
     );
     if (dup.rows.length) {
-      return res.status(400).json({ message: 'Username or email already exists' });
+      return res
+        .status(400)
+        .json({ message: "Username or email already exists" });
     }
     const hashedPassword = bcrypt.hashSync(password, 10);
     const created = await pool.query(
@@ -87,25 +94,29 @@ app.post('/register', async (req, res) => {
     }
     res.status(201).json({ message: 'User registered successfully' });
   } catch (err) {
-    if (err.code === '23505') {
-      return res.status(400).json({ message: 'Username or email already exists' });
+    if (err.code === "23505") {
+      return res
+        .status(400)
+        .json({ message: "Username or email already exists" });
     }
     console.error(err);
-    res.status(500).json({ message: 'Error registering user' });
+    res.status(500).json({ message: "Error registering user" });
   }
 });
-
-app.post('/login', async (req, res) => {
+app.post("/login", async (req, res) => {
   const { username: rawUsername, password } = req.body;
   const username = rawUsername?.toLowerCase();
+
   try {
     const { rows } = await pool.query(
       'SELECT id, password_hash, role, is_active FROM users WHERE lower(username) = $1',
       [username]
     );
+
     const user = rows[0];
+
     if (!user || !bcrypt.compareSync(password, user.password_hash)) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
     if (!user.is_active) {
       return res.status(403).json({ message: 'Your account is deactivated' });
@@ -114,18 +125,17 @@ app.post('/login', async (req, res) => {
     res.json({ message: 'Login successful', token });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Error logging in' });
+    res.status(500).json({ message: "Error logging in" });
   }
 });
-
-app.get('/me', verifyToken, async (req, res) => {
+app.get("/me", verifyToken, async (req, res) => {
   try {
     const { rows } = await pool.query(
       'SELECT username, email, phone, role, is_active FROM users WHERE id = $1',
       [req.user.id]
     );
     if (!rows.length) {
-      return res.status(401).json({ message: 'User no longer exists' });
+      return res.status(401).json({ message: "User no longer exists" });
     }
     const u = rows[0];
     if (!u.is_active) {
@@ -134,19 +144,19 @@ app.get('/me', verifyToken, async (req, res) => {
     res.json({ username: u.username, email: u.email, phone: u.phone || '', role: u.role, isActive: u.is_active });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Error fetching user' });
+    res.status(500).json({ message: "Error fetching user" });
   }
 });
 
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/messages', messageRoutes);
-app.use('/api/my', myPortalRoutes);
-app.use('/api/testimonials', testimonialsPublicRoutes);
-app.use('/api/gallery', galleryRoutes);
-app.use('/api/appointments/book', appointmentBookingRoutes);
-app.use('/api/appointments', appointmentRoutes);
-app.use('/api/admin/testimonials', testimonialsAdminRoutes);
-app.use('/api/admin/users', usersAdminRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/messages", messageRoutes);
+app.use("/api/my", myPortalRoutes);
+app.use("/api/testimonials", testimonialsPublicRoutes);
+app.use("/api/gallery", galleryRoutes);
+app.use("/api/appointments/book", appointmentBookingRoutes);
+app.use("/api/appointments", appointmentRoutes);
+app.use("/api/admin/testimonials", testimonialsAdminRoutes);
+app.use("/api/admin/users", usersAdminRoutes);
 
 app.use((req, res, next) => {
   if (res.headersSent) return next();

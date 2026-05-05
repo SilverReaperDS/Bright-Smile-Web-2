@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -38,21 +38,21 @@ import dashStyles from './dashboard.styles';
 export default function Users() {
   const [allUsers, setAllUsers] = useState([]);
   const [staff, setStaff] = useState([]);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [newUsername, setNewUsername] = useState('');
-  const [newEmail, setNewEmail] = useState('');
-  const [newPhone, setNewPhone] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  const [newUsername, setNewUsername] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newPhone, setNewPhone] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [saving, setSaving] = useState(false);
   const [editOpen, setEditOpen] = useState(null);
-  const [editUsername, setEditUsername] = useState('');
-  const [editEmail, setEditEmail] = useState('');
-  const [editPhone, setEditPhone] = useState('');
-  const [editPassword, setEditPassword] = useState('');
+  const [editUsername, setEditUsername] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editPassword, setEditPassword] = useState("");
 
   const load = useCallback(async () => {
-    setError('');
+    setError("");
     try {
       const [users, staffList] = await Promise.all([
         fetchAdminUsers(),
@@ -61,7 +61,7 @@ export default function Users() {
       setAllUsers(users);
       setStaff(staffList);
     } catch (e) {
-      setError(e.message || 'Failed to load');
+      setError(e.message || "Failed to load");
     } finally {
       setLoading(false);
     }
@@ -74,7 +74,7 @@ export default function Users() {
   const handleAddStaff = async (e) => {
     e.preventDefault();
     setSaving(true);
-    setError('');
+    setError("");
     try {
       await createAdminStaff({
         username: newUsername.trim(),
@@ -82,10 +82,10 @@ export default function Users() {
         phone: newPhone.trim(),
         password: newPassword,
       });
-      setNewUsername('');
-      setNewEmail('');
-      setNewPhone('');
-      setNewPassword('');
+      setNewUsername("");
+      setNewEmail("");
+      setNewPhone("");
+      setNewPassword("");
       await load();
     } catch (err) {
       setError(err.message);
@@ -98,23 +98,22 @@ export default function Users() {
     setEditOpen(member);
     setEditUsername(member.username);
     setEditEmail(member.email);
-    setEditPhone(member.phone || '');
-    setEditPassword('');
+    setEditPhone(member.phone || "");
+    setEditPassword("");
   };
 
   const submitEdit = async () => {
     if (!editOpen) return;
     setSaving(true);
-    setError('');
+    setError("");
     try {
       const body = {
         username: editUsername.trim(),
         email: editEmail.trim(),
         phone: editPhone.trim(),
       };
-      if (editPassword.trim()) {
-        body.password = editPassword;
-      }
+      if (editPassword.trim()) body.password = editPassword;
+
       await patchAdminStaff(editOpen.id, body);
       setEditOpen(null);
       await load();
@@ -127,13 +126,13 @@ export default function Users() {
 
   const removeStaff = async (member) => {
     if (
-      !window.confirm(
-        `Remove staff account "${member.username}"? Assigned appointments will become unassigned.`,
-      )
+      !window.confirm(`
+        Remove staff account "${member.username}"? Assigned appointments will become unassigned.`)
     ) {
       return;
     }
-    setError('');
+
+    setError("");
     try {
       await deleteAdminStaff(member.id);
       await load();
@@ -141,8 +140,9 @@ export default function Users() {
       setError(err.message);
     }
   };
+
   const handleRoleChange = async (userId, role) => {
-    setError('');
+    setError("");
     try {
       await patchAdminUserRole(userId, { role });
       await load();
@@ -168,9 +168,9 @@ export default function Users() {
   };
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 3 }}>
-        <CircularProgress size={28} sx={{ color: '#0db1ad' }} />
-        <Typography sx={{ color: '#5a6b6b' }}>Loading…</Typography>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, p: 3 }}>
+        <CircularProgress size={28} sx={{ color: "#0db1ad" }} />
+        <Typography sx={{ color: "#5a6b6b" }}>Loading…</Typography>
       </Box>
     );
   }
@@ -189,7 +189,11 @@ export default function Users() {
       </Box>
 
       {error && (
-        <Alert severity="error" sx={dashStyles.alert} onClose={() => setError('')}>
+        <Alert
+          severity="error"
+          sx={dashStyles.alert}
+          onClose={() => setError("")}
+        >
           {error}
         </Alert>
       )}
@@ -197,19 +201,27 @@ export default function Users() {
       <Typography sx={dashStyles.sectionTitle}>Staff team</Typography>
       <Typography color="text.secondary" sx={{ mb: 2 }}>
         Add clinic staff here. They can log in with the credentials you set.
-        Appointments can only be assigned to people in this list.
       </Typography>
 
-      <Paper elevation={0} sx={{ ...dashStyles.card, mb: 4 }} component="form" onSubmit={handleAddStaff}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#0f2a2a', mb: 2 }}>
+      <Paper
+        elevation={0}
+        sx={{ ...dashStyles.card, mb: 4 }}
+        component="form"
+        onSubmit={handleAddStaff}
+      >
+        <Typography
+          variant="subtitle2"
+          sx={{ fontWeight: 700, color: "#0f2a2a", mb: 2 }}
+        >
           Add staff member
         </Typography>
+
         <Box
           sx={{
-            display: 'flex',
-            flexWrap: 'wrap',
+            display: "flex",
+            flexWrap: "wrap",
             gap: 2,
-            alignItems: 'flex-start',
+            alignItems: "flex-start",
           }}
         >
           <TextField
@@ -245,7 +257,12 @@ export default function Users() {
             helperText="8+ chars, number & special character"
             autoComplete="new-password"
           />
-          <Button type="submit" variant="contained" disabled={saving} sx={{ mt: 0.5, ...dashStyles.primaryBtn }}>
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={saving}
+            sx={{ mt: 0.5, ...dashStyles.primaryBtn }}
+          >
             Add staff
           </Button>
         </Box>
@@ -285,10 +302,20 @@ export default function Users() {
                   />
                 </TableCell>
                 <TableCell align="right">
-                  <IconButton aria-label="Edit" size="small" onClick={() => openEdit(s)} color="primary">
+                  <IconButton
+                    aria-label="Edit"
+                    size="small"
+                    onClick={() => openEdit(s)}
+                    color="primary"
+                  >
                     <EditOutlinedIcon />
                   </IconButton>
-                  <IconButton aria-label="Delete" size="small" onClick={() => removeStaff(s)} color="error">
+                  <IconButton
+                    aria-label="Delete"
+                    size="small"
+                    onClick={() => removeStaff(s)}
+                    color="error"
+                  >
                     <DeleteOutlineIcon />
                   </IconButton>
                 </TableCell>
@@ -300,8 +327,10 @@ export default function Users() {
 
       <Typography sx={dashStyles.sectionTitle}>All accounts</Typography>
       <Typography color="text.secondary" sx={{ mb: 2 }}>
-        Every registered user (patients, staff, admins).
+        Every registered user. You can assign roles and activate/deactivate
+        accounts.
       </Typography>
+
       <Paper elevation={0} sx={dashStyles.card}>
         <Table size="small">
           <TableHead>
@@ -328,7 +357,7 @@ export default function Users() {
                 <TableCell>{new Date(u.createdAt).toLocaleString()}</TableCell>
                 <TableCell>{u.username}</TableCell>
                 <TableCell>{u.email}</TableCell>
-                <TableCell>{u.phone || '—'}</TableCell>
+                <TableCell>{u.phone || "—"}</TableCell>
                 <TableCell>
                   <Select
                     size="small"
@@ -406,7 +435,12 @@ export default function Users() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditOpen(null)}>Cancel</Button>
-          <Button variant="contained" onClick={submitEdit} disabled={saving} sx={dashStyles.primaryBtn}>
+          <Button
+            variant="contained"
+            onClick={submitEdit}
+            disabled={saving}
+            sx={dashStyles.primaryBtn}
+          >
             Save
           </Button>
         </DialogActions>

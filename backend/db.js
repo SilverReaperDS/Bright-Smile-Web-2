@@ -1,4 +1,4 @@
-const { Pool } = require('pg');
+const { Pool } = require("pg");
 
 const hasConnectionString =
   typeof process.env.DATABASE_URL === 'string' && process.env.DATABASE_URL.trim() !== '';
@@ -32,8 +32,8 @@ if (!hasConnectionString && !hasDiscreteConfig) {
 
 const pool = new Pool(poolConfig);
 
-pool.on('error', (err) => {
-  console.error('Unexpected PostgreSQL client error', err);
+pool.on("error", (err) => {
+  console.error("Unexpected PostgreSQL client error", err);
 });
 
 async function ensureSchema() {
@@ -170,7 +170,9 @@ async function ensureSchema() {
       CREATE INDEX IF NOT EXISTS idx_gallery_cases_patient_user_id ON gallery_cases (patient_user_id);
     `);
 
-    const { rows: caseCountRows } = await client.query('SELECT COUNT(*)::int AS c FROM gallery_cases');
+    const { rows: caseCountRows } = await client.query(
+      "SELECT COUNT(*)::int AS c FROM gallery_cases",
+    );
     if (caseCountRows[0].c === 0) {
       const { rows: tab } = await client.query(`
         SELECT EXISTS (
@@ -181,7 +183,7 @@ async function ensureSchema() {
       if (tab[0].e) {
         const { rows: items } = await client.query(
           `SELECT title, description, image_url, category, sort_order, created_at
-           FROM gallery_items ORDER BY sort_order ASC, created_at ASC`
+           FROM gallery_items ORDER BY sort_order ASC, created_at ASC`,
         );
         for (let i = 0; i < items.length; i += 2) {
           const a = items[i];
@@ -194,16 +196,41 @@ async function ensureSchema() {
              VALUES ($1, $2, $3, $4, $5, $6)`,
             [
               a.title || (b && b.title) || null,
-              [a.description, b?.description].filter(Boolean).join('\n\n') || null,
+              [a.description, b?.description].filter(Boolean).join("\n\n") ||
+                null,
               a.category || b?.category || null,
               before,
               after,
               Math.floor(i / 2),
-            ]
+            ],
           );
         }
       }
     }
+    await client.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true;
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_activity_logs (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES users (id) ON DELETE SET NULL,
+        actor_id UUID REFERENCES users (id) ON DELETE SET NULL,
+        action VARCHAR(100) NOT NULL,
+        details TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      );
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_user_activity_logs_created_at
+      ON user_activity_logs (created_at DESC);
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_user_activity_logs_user_id
+      ON user_activity_logs (user_id);
+    `);
   } finally {
     client.release();
   }

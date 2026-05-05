@@ -22,4 +22,5 @@ router.get("/logs", listUserActivityLogs);
 router.patch("/:id/role", updateUserRole);
 router.patch("/:id/active", toggleUserActive);
 router.get("/", listUsers);
+
 module.exports = router;

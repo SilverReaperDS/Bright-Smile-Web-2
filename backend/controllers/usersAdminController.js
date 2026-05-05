@@ -66,18 +66,17 @@ async function createStaff(req, res) {
     password,
     phone: rawPhone,
   } = req.body || {};
+
   const username = rawUsername?.toLowerCase()?.trim();
   const email = rawEmail?.toLowerCase()?.trim();
   const phone = normalizePhone(rawPhone);
 
   const pwdErr = validatePassword(password);
-  if (pwdErr) {
-    return res.status(400).json({ error: pwdErr });
-  }
+  if (pwdErr) return res.status(400).json({ error: pwdErr });
+
   const phoneErr = validatePhoneRequired(phone);
-  if (phoneErr) {
-    return res.status(400).json({ error: phoneErr });
-  }
+  if (phoneErr) return res.status(400).json({ error: phoneErr });
+
   if (!username || !email) {
     return res.status(400).json({ error: "Username and email are required" });
   }
@@ -87,12 +86,15 @@ async function createStaff(req, res) {
       "SELECT id FROM users WHERE lower(username) = $1 OR lower(email) = $2 LIMIT 1",
       [username, email],
     );
+
     if (dup.rows.length) {
       return res
         .status(400)
         .json({ error: "Username or email already exists" });
     }
+
     const hashedPassword = bcrypt.hashSync(password, 10);
+
     const { rows } = await pool.query(
       `INSERT INTO users (username, email, phone, password_hash, role)
        VALUES ($1, $2, $3, $4, 'staff')
@@ -132,9 +134,11 @@ async function updateStaff(req, res) {
       "SELECT id, role, username, email, phone FROM users WHERE id = $1",
       [id],
     );
+
     if (!existing.rows.length) {
       return res.status(404).json({ error: "User not found" });
     }
+
     if (existing.rows[0].role !== "staff") {
       return res
         .status(400)
@@ -147,34 +151,31 @@ async function updateStaff(req, res) {
 
     if (rawUsername !== undefined) {
       const username = rawUsername?.toLowerCase()?.trim();
-      if (!username) {
+      if (!username)
         return res.status(400).json({ error: "Username cannot be empty" });
-      }
       sets.push(`username = $${n++}`);
       values.push(username);
     }
+
     if (rawEmail !== undefined) {
       const email = rawEmail?.toLowerCase()?.trim();
-      if (!email) {
+      if (!email)
         return res.status(400).json({ error: "Email cannot be empty" });
-      }
       sets.push(`email = $${n++}`);
       values.push(email);
     }
+
     if (password !== undefined && password !== "") {
       const pwdErr = validatePassword(password);
-      if (pwdErr) {
-        return res.status(400).json({ error: pwdErr });
-      }
+      if (pwdErr) return res.status(400).json({ error: pwdErr });
       sets.push(`password_hash = $${n++}`);
       values.push(bcrypt.hashSync(password, 10));
     }
+
     if (rawPhone !== undefined) {
       const phone = normalizePhone(rawPhone);
       const phoneErr = validatePhoneRequired(phone);
-      if (phoneErr) {
-        return res.status(400).json({ error: phoneErr });
-      }
+      if (phoneErr) return res.status(400).json({ error: phoneErr });
       sets.push(`phone = $${n++}`);
       values.push(phone);
     }
@@ -184,12 +185,14 @@ async function updateStaff(req, res) {
     }
 
     values.push(id);
+
     const { rows } = await pool.query(
       `UPDATE users SET ${sets.join(", ")}
        WHERE id = $${n} AND role = 'staff'
        RETURNING id, username, email, phone, role, is_active, created_at`,
       values,
     );
+
     if (!rows.length) {
       return res.status(404).json({ error: "Staff not found" });
     }
@@ -226,9 +229,11 @@ async function deleteStaff(req, res) {
       "SELECT id, role, username FROM users WHERE id = $1",
       [id],
     );
+
     if (!rows.length) {
       return res.status(404).json({ error: "User not found" });
     }
+
     if (rows[0].role !== "staff") {
       return res
         .status(400)
