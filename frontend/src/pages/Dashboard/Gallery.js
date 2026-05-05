@@ -19,6 +19,7 @@ import {
   Stack,
   Chip,
   CircularProgress,
+  MenuItem,
 } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -32,6 +33,7 @@ import {
   deleteAdminGalleryItem,
   patchAdminGalleryCase,
   patchAdminGalleryReorder,
+  fetchAdminUsers,
 } from '../../services/api';
 import dashStyles from './dashboard.styles';
 
@@ -88,6 +90,8 @@ export default function Gallery() {
   const [urlBefore, setUrlBefore] = useState('');
   const [urlAfter, setUrlAfter] = useState('');
   const [saving, setSaving] = useState(false);
+  const [patients, setPatients] = useState([]);
+  const [patientUserId, setPatientUserId] = useState('');
   const [fileKey, setFileKey] = useState(0);
   const [editOpen, setEditOpen] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -99,12 +103,21 @@ export default function Gallery() {
   const [editBeforeFile, setEditBeforeFile] = useState(null);
   const [editAfterFile, setEditAfterFile] = useState(null);
   const [editFileKey, setEditFileKey] = useState(0);
+  const [editPatientUserId, setEditPatientUserId] = useState('');
+
+  const patientNameById = (id) => {
+    if (!id) return '—';
+    const p = patients.find((u) => u.id === id);
+    return p ? p.username : 'Unknown patient';
+  };
 
   const load = useCallback(async () => {
     setError('');
     try {
       const data = await fetchAdminGallery();
+      const users = await fetchAdminUsers();
       setCases(Array.isArray(data) ? data : []);
+      setPatients(Array.isArray(users) ? users.filter((u) => u.role === 'patient') : []);
     } catch (e) {
       setError(e.message || 'Failed to load');
     } finally {
@@ -147,6 +160,7 @@ export default function Gallery() {
         if (title.trim()) fd.append('title', title.trim());
         if (description.trim()) fd.append('description', description.trim());
         if (category.trim()) fd.append('category', category.trim());
+        if (patientUserId) fd.append('patientUserId', patientUserId);
         fd.append('beforeImage', beforeFile);
         fd.append('afterImage', afterFile);
         await postAdminGalleryCase(fd);
@@ -155,6 +169,7 @@ export default function Gallery() {
         setCategory('');
         setBeforeFile(null);
         setAfterFile(null);
+        setPatientUserId('');
         setUrlBefore('');
         setUrlAfter('');
         setFileKey((k) => k + 1);
@@ -175,10 +190,12 @@ export default function Gallery() {
           title: title.trim() || undefined,
           description: description.trim() || undefined,
           category: category.trim() || undefined,
+          patientUserId: patientUserId || undefined,
         });
         setTitle('');
         setDescription('');
         setCategory('');
+        setPatientUserId('');
         setUrlBefore('');
         setUrlAfter('');
         await load();
@@ -209,6 +226,7 @@ export default function Gallery() {
     setEditCategory(row.category || '');
     setEditBeforeUrl(row.beforeImageUrl || '');
     setEditAfterUrl(row.afterImageUrl || '');
+    setEditPatientUserId(row.patientUserId || '');
     setEditBeforeFile(null);
     setEditAfterFile(null);
     setEditFileKey((k) => k + 1);
@@ -225,6 +243,7 @@ export default function Gallery() {
           title: editTitle.trim() || null,
           description: editDescription.trim() || null,
           category: editCategory.trim() || null,
+          patientUserId: editPatientUserId || null,
           beforeImageUrl: editBeforeUrl.trim(),
           afterImageUrl: editAfterUrl.trim(),
         });
@@ -233,6 +252,7 @@ export default function Gallery() {
         fd.append('title', editTitle.trim());
         fd.append('description', editDescription.trim());
         fd.append('category', editCategory.trim());
+        fd.append('patientUserId', editPatientUserId);
         if (editBeforeFile) fd.append('beforeImage', editBeforeFile);
         else fd.append('beforeImageUrl', editBeforeUrl.trim() || editing.beforeImageUrl || '');
         if (editAfterFile) fd.append('afterImage', editAfterFile);
@@ -326,6 +346,21 @@ export default function Gallery() {
             rows={2}
           />
           <TextField label="Category (optional)" value={category} onChange={(e) => setCategory(e.target.value)} fullWidth />
+          <TextField
+            select
+            label="Patient (optional)"
+            value={patientUserId}
+            onChange={(e) => setPatientUserId(e.target.value)}
+            fullWidth
+            helperText="Attach this smile case to a specific patient"
+          >
+            <MenuItem value="">Not linked</MenuItem>
+            {patients.map((p) => (
+              <MenuItem key={p.id} value={p.id}>
+                {p.username} ({p.email})
+              </MenuItem>
+            ))}
+          </TextField>
           <Box>
             <Button
               type="submit"
@@ -348,13 +383,14 @@ export default function Gallery() {
               <TableCell sx={dashStyles.tableHeaderCell}>After</TableCell>
               <TableCell sx={dashStyles.tableHeaderCell}>Title</TableCell>
               <TableCell sx={dashStyles.tableHeaderCell}>Category</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Patient</TableCell>
               <TableCell align="right" sx={dashStyles.tableHeaderCell}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {cases.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6}>
+                <TableCell colSpan={7}>
                   <Typography color="text.secondary">No cases yet.</Typography>
                 </TableCell>
               </TableRow>
@@ -414,6 +450,7 @@ export default function Gallery() {
                 </TableCell>
                 <TableCell>{row.title || '—'}</TableCell>
                 <TableCell>{row.category || '—'}</TableCell>
+                <TableCell>{patientNameById(row.patientUserId)}</TableCell>
                 <TableCell align="right">
                   <IconButton aria-label="Edit" size="small" onClick={() => openEdit(row)}>
                     <EditOutlinedIcon fontSize="small" />
@@ -461,6 +498,21 @@ export default function Gallery() {
             onChange={(e) => setEditDescription(e.target.value)}
           />
           <TextField margin="dense" label="Category" fullWidth value={editCategory} onChange={(e) => setEditCategory(e.target.value)} />
+          <TextField
+            margin="dense"
+            select
+            label="Patient"
+            fullWidth
+            value={editPatientUserId}
+            onChange={(e) => setEditPatientUserId(e.target.value)}
+          >
+            <MenuItem value="">Not linked</MenuItem>
+            {patients.map((p) => (
+              <MenuItem key={p.id} value={p.id}>
+                {p.username} ({p.email})
+              </MenuItem>
+            ))}
+          </TextField>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditOpen(false)} disabled={saving}>

@@ -68,7 +68,26 @@ async function ensureSchema() {
       ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(50);
     `);
     await client.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true;
+    `);
+    await client.query(`
       UPDATE users SET phone = '' WHERE phone IS NULL;
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_activity_logs (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        actor_id UUID REFERENCES users (id) ON DELETE SET NULL,
+        user_id UUID REFERENCES users (id) ON DELETE SET NULL,
+        action VARCHAR(80) NOT NULL,
+        details TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      );
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_user_activity_logs_created_at ON user_activity_logs (created_at DESC);
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_user_activity_logs_user_id ON user_activity_logs (user_id);
     `);
     await client.query(`
       ALTER TABLE messages ADD COLUMN IF NOT EXISTS phone VARCHAR(50);
@@ -134,6 +153,7 @@ async function ensureSchema() {
         title VARCHAR(500),
         description TEXT,
         category VARCHAR(255),
+        patient_user_id UUID REFERENCES users (id) ON DELETE SET NULL,
         before_image_url TEXT NOT NULL,
         after_image_url TEXT,
         sort_order INT NOT NULL DEFAULT 0,
@@ -141,7 +161,13 @@ async function ensureSchema() {
       );
     `);
     await client.query(`
+      ALTER TABLE gallery_cases ADD COLUMN IF NOT EXISTS patient_user_id UUID REFERENCES users (id) ON DELETE SET NULL;
+    `);
+    await client.query(`
       CREATE INDEX IF NOT EXISTS idx_gallery_cases_sort ON gallery_cases (sort_order ASC, created_at DESC);
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_gallery_cases_patient_user_id ON gallery_cases (patient_user_id);
     `);
 
     const { rows: caseCountRows } = await client.query(

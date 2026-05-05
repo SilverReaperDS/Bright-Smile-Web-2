@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Box,
   Typography,
@@ -20,6 +20,10 @@ import {
   fetchAdminThreadMessages,
   postAdminThreadReply,
   deleteAdminMessage,
+  initializeRealtimeSocket,
+  disconnectRealtimeSocket,
+  realtimeJoinThread,
+  realtimeLeaveThread,
 } from '../../services/api';
 import dashStyles from './dashboard.styles';
 
@@ -37,6 +41,7 @@ export default function Messages() {
   const [loadingThreads, setLoadingThreads] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
+  const selectedIdRef = useRef(null);
 
   const loadThreads = useCallback(async () => {
     setError('');
@@ -79,6 +84,42 @@ export default function Messages() {
   useEffect(() => {
     loadMessages(selectedId);
   }, [selectedId, loadMessages]);
+
+  useEffect(() => {
+    selectedIdRef.current = selectedId;
+  }, [selectedId]);
+
+  useEffect(() => {
+    const socket = initializeRealtimeSocket();
+    if (!socket) return undefined;
+
+    const onMessageNew = async (payload) => {
+      const activeThreadId = selectedIdRef.current;
+      if (payload?.threadId && payload.threadId === activeThreadId) {
+        await loadMessages(activeThreadId);
+      }
+      await loadThreads();
+    };
+
+    const onThreadUpdated = async () => {
+      await loadThreads();
+    };
+
+    socket.on('message:new', onMessageNew);
+    socket.on('thread:updated', onThreadUpdated);
+
+    return () => {
+      socket.off('message:new', onMessageNew);
+      socket.off('thread:updated', onThreadUpdated);
+      disconnectRealtimeSocket();
+    };
+  }, [loadMessages, loadThreads]);
+
+  useEffect(() => {
+    if (!selectedId) return undefined;
+    realtimeJoinThread(selectedId);
+    return () => realtimeLeaveThread(selectedId);
+  }, [selectedId]);
 
   const send = async () => {
     const text = draft.trim();

@@ -20,6 +20,7 @@ import PrivateRoute from './routes/PrivateRoute';
 import PatientPortalRoute from './routes/PatientPortalRoute';
 import BookAppointment from './pages/BookAppointment/BookAppointment';
 import MyDashboard from './pages/MyDashboard/MyDashboard';
+import NotFound from './pages/NotFound/NotFound';
 
 
 
@@ -72,6 +73,7 @@ export default function App() {
                 </PatientPortalRoute>
               }
             />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
         <Footer />

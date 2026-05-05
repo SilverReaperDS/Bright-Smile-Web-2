@@ -96,20 +96,19 @@ async function createStaff(req, res) {
     const hashedPassword = bcrypt.hashSync(password, 10);
 
     const { rows } = await pool.query(
-      `INSERT INTO users (username, email, phone, password_hash, role, is_active)
-       VALUES ($1, $2, $3, $4, 'staff', true)
+      `INSERT INTO users (username, email, phone, password_hash, role)
+       VALUES ($1, $2, $3, $4, 'staff')
        RETURNING id, username, email, phone, role, is_active, created_at`,
       [username, email, phone, hashedPassword],
     );
-
+    const created = mapUser(rows[0]);
     await logActivity(
       req.user.id,
-      rows[0].id,
-      "CREATE_STAFF",
-      ` Created staff ${username}`,
+      created.id,
+      "staff_created",
+      `Created staff ${created.username}`,
     );
-
-    res.status(201).json(mapUser(rows[0]));
+    res.status(201).json(created);
   } catch (err) {
     if (err.code === "23505") {
       return res
@@ -132,7 +131,7 @@ async function updateStaff(req, res) {
 
   try {
     const existing = await pool.query(
-      "SELECT id, role FROM users WHERE id = $1",
+      "SELECT id, role, username, email, phone FROM users WHERE id = $1",
       [id],
     );
 
@@ -197,10 +196,14 @@ async function updateStaff(req, res) {
     if (!rows.length) {
       return res.status(404).json({ error: "Staff not found" });
     }
-
-    await logActivity(req.user.id, id, "UPDATE_STAFF", "Updated staff account");
-
-    res.json(mapUser(rows[0]));
+    const updated = mapUser(rows[0]);
+    await logActivity(
+      req.user.id,
+      id,
+      "staff_updated",
+      `Updated staff ${updated.username}`,
+    );
+    res.json(updated);
   } catch (err) {
     if (err.code === "23505") {
       return res
@@ -241,14 +244,12 @@ async function deleteStaff(req, res) {
       id,
       "staff",
     ]);
-
     await logActivity(
       req.user.id,
       id,
-      "DELETE_STAFF",
+      "staff_deleted",
       `Deleted staff ${rows[0].username}`,
     );
-
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -283,14 +284,14 @@ async function updateUserRole(req, res) {
       return res.status(404).json({ error: "User not found" });
     }
 
+    const updated = mapUser(rows[0]);
     await logActivity(
       req.user.id,
       id,
-      "CHANGE_ROLE",
-      ` Changed role to ${role}`,
+      "role_updated",
+      `Role changed to ${updated.role} for ${updated.username}`,
     );
-
-    res.json(mapUser(rows[0]));
+    res.json(updated);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to update role" });
@@ -300,15 +301,11 @@ async function updateUserRole(req, res) {
 async function toggleUserActive(req, res) {
   const { id } = req.params;
   const { isActive } = req.body || {};
-
   if (typeof isActive !== "boolean") {
-    return res.status(400).json({ error: "isActive must be true or false" });
+    return res.status(400).json({ error: "isActive must be boolean" });
   }
-
   if (id === req.user.id && isActive === false) {
-    return res
-      .status(400)
-      .json({ error: "You cannot deactivate your own account" });
+    return res.status(400).json({ error: "You cannot deactivate your own account" });
   }
 
   try {
@@ -319,19 +316,17 @@ async function toggleUserActive(req, res) {
        RETURNING id, username, email, phone, role, is_active, created_at`,
       [isActive, id],
     );
-
     if (!rows.length) {
       return res.status(404).json({ error: "User not found" });
     }
-
+    const updated = mapUser(rows[0]);
     await logActivity(
       req.user.id,
       id,
-      isActive ? "ACTIVATE_USER" : "DEACTIVATE_USER",
-      isActive ? "Activated user account" : "Deactivated user account",
+      "active_status_updated",
+      `${updated.username} ${isActive ? "activated" : "deactivated"}`,
     );
-
-    res.json(mapUser(rows[0]));
+    res.json(updated);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to update user status" });
@@ -342,27 +337,32 @@ async function listUserActivityLogs(req, res) {
   try {
     const { rows } = await pool.query(
       `SELECT
-         l.id,
-         l.action,
-         l.details,
-         l.created_at,
-         u.username AS user_username,
-         a.username AS actor_username
-       FROM user_activity_logs l
-       LEFT JOIN users u ON u.id = l.user_id
-       LEFT JOIN users a ON a.id = l.actor_id
-       ORDER BY l.created_at DESC
-       LIMIT 100`,
+        l.id,
+        l.action,
+        l.details,
+        l.created_at,
+        actor.id AS actor_id,
+        actor.username AS actor_username,
+        target.id AS user_id,
+        target.username AS target_username
+      FROM user_activity_logs l
+      LEFT JOIN users actor ON actor.id = l.actor_id
+      LEFT JOIN users target ON target.id = l.user_id
+      ORDER BY l.created_at DESC
+      LIMIT 500`,
     );
-
     res.json(
       rows.map((r) => ({
         id: r.id,
         action: r.action,
         details: r.details || "",
-        userUsername: r.user_username || "Deleted user",
-        actorUsername: r.actor_username || "System",
         createdAt: r.created_at,
+        actor: r.actor_id
+          ? { id: r.actor_id, username: r.actor_username || "Unknown" }
+          : null,
+        user: r.user_id
+          ? { id: r.user_id, username: r.target_username || "Unknown" }
+          : null,
       })),
     );
   } catch (err) {
@@ -380,4 +380,5 @@ module.exports = {
   updateUserRole,
   toggleUserActive,
   listUserActivityLogs,
+  logActivity,
 };
