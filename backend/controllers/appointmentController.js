@@ -190,6 +190,9 @@ async function listMyAppointments(req, res) {
 }
 
 async function createPatientBooking(req, res) {
+  if (req.user?.role === 'admin') {
+    return res.status(403).json({ error: 'Admins cannot book patient appointments from this flow' });
+  }
   const { appointmentDate, notes } = req.body || {};
   if (!appointmentDate) {
     return res.status(400).json({ error: 'appointmentDate is required' });

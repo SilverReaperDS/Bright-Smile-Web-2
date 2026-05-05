@@ -1,5 +1,6 @@
 const { pool } = require('../db');
 const { rowToMessage, messageSelect } = require('./messageShared');
+const { emitMessageEvent } = require('../utils/realtime');
 
 async function assertThreadOwnedByUser(threadId, userId) {
   const { rows } = await pool.query(
@@ -93,7 +94,9 @@ async function postMyThreadReply(req, res) {
        RETURNING ${messageSelect}`,
       [threadId, req.user.id, name, email, phone, text]
     );
-    res.status(201).json(rowToMessage(rows[0]));
+    const dto = rowToMessage(rows[0]);
+    emitMessageEvent(req.app, dto);
+    res.status(201).json(dto);
   } catch (err) {
     if (err.code === '22P02') return res.status(400).json({ error: 'Invalid conversation id' });
     console.error(err);

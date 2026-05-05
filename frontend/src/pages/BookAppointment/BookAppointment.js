@@ -38,7 +38,12 @@ export default function BookAppointment() {
       setNotes('');
       setWhen(defaultDateTimeLocal());
     } catch (err) {
-      setError(err.message || 'Something went wrong');
+      const msg = err.message || 'Something went wrong';
+      if (/admin/i.test(msg) && /book/i.test(msg)) {
+        setError('Admin accounts cannot use this patient booking form. Use the admin dashboard appointments tools.');
+      } else {
+        setError(msg);
+      }
     } finally {
       setSubmitting(false);
     }

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -50,6 +50,10 @@ import {
   fetchMyTestimonials,
   createMyTestimonial,
   deleteMyTestimonial,
+  initializeRealtimeSocket,
+  disconnectRealtimeSocket,
+  realtimeJoinThread,
+  realtimeLeaveThread,
 } from '../../services/api';
 import styles from './myDashboard.styles';
 
@@ -78,6 +82,7 @@ function MessagesPanel() {
   const [loadingThreads, setLoadingThreads] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
+  const selectedIdRef = useRef(null);
 
   const loadThreads = useCallback(async () => {
     setError('');
@@ -120,6 +125,42 @@ function MessagesPanel() {
   useEffect(() => {
     loadMessages(selectedId);
   }, [selectedId, loadMessages]);
+
+  useEffect(() => {
+    selectedIdRef.current = selectedId;
+  }, [selectedId]);
+
+  useEffect(() => {
+    const socket = initializeRealtimeSocket();
+    if (!socket) return undefined;
+
+    const onMessageNew = async (payload) => {
+      const activeThreadId = selectedIdRef.current;
+      if (payload?.threadId && payload.threadId === activeThreadId) {
+        await loadMessages(activeThreadId);
+      }
+      await loadThreads();
+    };
+
+    const onThreadUpdated = async () => {
+      await loadThreads();
+    };
+
+    socket.on('message:new', onMessageNew);
+    socket.on('thread:updated', onThreadUpdated);
+
+    return () => {
+      socket.off('message:new', onMessageNew);
+      socket.off('thread:updated', onThreadUpdated);
+      disconnectRealtimeSocket();
+    };
+  }, [loadMessages, loadThreads]);
+
+  useEffect(() => {
+    if (!selectedId) return undefined;
+    realtimeJoinThread(selectedId);
+    return () => realtimeLeaveThread(selectedId);
+  }, [selectedId]);
 
   const send = async () => {
     const text = draft.trim();

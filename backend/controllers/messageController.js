@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const { pool } = require('../db');
 const { normalizePhone, validatePhoneRequired } = require('../utils/validatePhone');
 const { rowToMessage, messageSelect } = require('./messageShared');
+const { emitMessageEvent } = require('../utils/realtime');
 
 async function getMessages(req, res) {
   try {
@@ -94,7 +95,9 @@ async function adminReplyToThread(req, res) {
        RETURNING ${messageSelect}`,
       [threadId, userId, name, email, phone, text]
     );
-    res.status(201).json(rowToMessage(rows[0]));
+    const dto = rowToMessage(rows[0]);
+    emitMessageEvent(req.app, dto);
+    res.status(201).json(dto);
   } catch (err) {
     if (err.code === '22P02') return res.status(400).json({ error: 'Invalid thread id' });
     console.error(err);
@@ -158,7 +161,9 @@ async function createMessage(req, res) {
        RETURNING ${messageSelect}`,
       [threadId, userId, name, email, phone, messageText]
     );
-    res.status(201).json(rowToMessage(rows[0]));
+    const dto = rowToMessage(rows[0]);
+    emitMessageEvent(req.app, dto);
+    res.status(201).json(dto);
   } catch (err) {
     console.error(err);
     res.status(400).json({ error: 'Failed to create message' });
