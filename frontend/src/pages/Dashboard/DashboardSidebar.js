@@ -16,6 +16,7 @@ import StarBorderOutlined from '@mui/icons-material/StarBorderOutlined';
 import PhotoLibraryOutlined from '@mui/icons-material/PhotoLibraryOutlined';
 import EventAvailableOutlined from '@mui/icons-material/EventAvailableOutlined';
 import PeopleOutlined from '@mui/icons-material/PeopleOutlined';
+import HistoryEduOutlined from '@mui/icons-material/HistoryEduOutlined';
 
 const links = [
   { label: 'Overview', path: '/dashboard', icon: DashboardOutlined },
@@ -24,6 +25,7 @@ const links = [
   { label: 'Gallery', path: '/dashboard/gallery', icon: PhotoLibraryOutlined },
   { label: 'Appointments', path: '/dashboard/appointments', icon: EventAvailableOutlined },
   { label: 'Users & staff', path: '/dashboard/users', icon: PeopleOutlined },
+  { label: 'Activity logs', path: '/dashboard/activity-logs', icon: HistoryEduOutlined },
 ];
 
 function isActivePath(currentPath, linkPath) {

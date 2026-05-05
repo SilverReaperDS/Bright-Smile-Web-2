@@ -14,6 +14,7 @@ function rowToCase(row) {
     title: row.title,
     description: row.description,
     category: row.category,
+    patientUserId: row.patient_user_id || null,
     beforeImageUrl: row.before_image_url,
     afterImageUrl: row.after_image_url,
     sortOrder: row.sort_order,
@@ -34,7 +35,7 @@ function tryUnlinkStoredUrl(urlPath) {
 async function getGallery(req, res) {
   try {
     const { rows } = await pool.query(
-      `SELECT id, title, description, category, before_image_url, after_image_url, sort_order, created_at
+      `SELECT id, title, description, category, patient_user_id, before_image_url, after_image_url, sort_order, created_at
        FROM gallery_cases
        ORDER BY sort_order ASC, created_at DESC`
     );
@@ -61,6 +62,7 @@ async function createCase(req, res) {
   let title;
   let description;
   let category;
+  let patientUserId;
 
   if (isMultipart) {
     const pair = readPairFromFiles(req);
@@ -69,6 +71,7 @@ async function createCase(req, res) {
     title = req.body?.title;
     description = req.body?.description;
     category = req.body?.category;
+    patientUserId = req.body?.patientUserId;
     if (!beforeUrl || !afterUrl) {
       tryUnlinkStoredUrl(beforeUrl);
       tryUnlinkStoredUrl(afterUrl);
@@ -81,6 +84,7 @@ async function createCase(req, res) {
     title = body.title;
     description = body.description;
     category = body.category;
+    patientUserId = body.patientUserId;
   }
 
   if (!beforeUrl || !afterUrl) {
@@ -90,11 +94,27 @@ async function createCase(req, res) {
   }
 
   try {
+    let patientId = null;
+    if (patientUserId !== undefined && patientUserId !== null && String(patientUserId).trim() !== '') {
+      patientId = String(patientUserId).trim();
+      const patientCheck = await pool.query(
+        "SELECT id FROM users WHERE id = $1 AND role = 'patient' LIMIT 1",
+        [patientId]
+      );
+      if (!patientCheck.rows.length) {
+        if (isMultipart) {
+          tryUnlinkStoredUrl(beforeUrl);
+          tryUnlinkStoredUrl(afterUrl);
+        }
+        return res.status(400).json({ error: 'Invalid patient selected' });
+      }
+    }
+
     const { rows } = await pool.query(
-      `INSERT INTO gallery_cases (title, description, category, before_image_url, after_image_url, sort_order)
-       VALUES ($1, $2, $3, $4, $5, (SELECT COALESCE(MAX(sort_order), -1) + 1 FROM gallery_cases gc))
-       RETURNING id, title, description, category, before_image_url, after_image_url, sort_order, created_at`,
-      [title ?? null, description ?? null, category ?? null, beforeUrl, afterUrl]
+      `INSERT INTO gallery_cases (title, description, category, patient_user_id, before_image_url, after_image_url, sort_order)
+       VALUES ($1, $2, $3, $4, $5, $6, (SELECT COALESCE(MAX(sort_order), -1) + 1 FROM gallery_cases gc))
+       RETURNING id, title, description, category, patient_user_id, before_image_url, after_image_url, sort_order, created_at`,
+      [title ?? null, description ?? null, category ?? null, patientId, beforeUrl, afterUrl]
     );
     res.status(201).json(rowToCase(rows[0]));
   } catch (err) {
@@ -116,6 +136,7 @@ async function updateCase(req, res) {
   let category;
   let beforeUrl;
   let afterUrl;
+  let patientUserId;
 
   if (isMultipart) {
     title = req.body?.title;
@@ -123,6 +144,7 @@ async function updateCase(req, res) {
     category = req.body?.category;
     if (req.body?.beforeImageUrl !== undefined) beforeUrl = req.body.beforeImageUrl;
     if (req.body?.afterImageUrl !== undefined) afterUrl = req.body.afterImageUrl;
+    if (req.body?.patientUserId !== undefined) patientUserId = req.body.patientUserId;
   } else {
     const body = req.body || {};
     title = body.title;
@@ -130,6 +152,7 @@ async function updateCase(req, res) {
     category = body.category;
     beforeUrl = body.beforeImageUrl;
     afterUrl = body.afterImageUrl;
+    patientUserId = body.patientUserId;
   }
 
   const pair = readPairFromFiles(req);
@@ -156,6 +179,24 @@ async function updateCase(req, res) {
   if (category !== undefined) {
     sets.push(`category = $${n++}`);
     values.push(category);
+  }
+  if (patientUserId !== undefined) {
+    const trimmed = patientUserId == null ? "" : String(patientUserId).trim();
+    if (!trimmed) {
+      sets.push(`patient_user_id = NULL`);
+    } else {
+      const patientCheck = await pool.query(
+        "SELECT id FROM users WHERE id = $1 AND role = 'patient' LIMIT 1",
+        [trimmed]
+      );
+      if (!patientCheck.rows.length) {
+        if (pair.beforeUrl) tryUnlinkStoredUrl(pair.beforeUrl);
+        if (pair.afterUrl) tryUnlinkStoredUrl(pair.afterUrl);
+        return res.status(400).json({ error: 'Invalid patient selected' });
+      }
+      sets.push(`patient_user_id = $${n++}`);
+      values.push(trimmed);
+    }
   }
   if (beforeUrl !== undefined) {
     sets.push(`before_image_url = $${n++}`);
@@ -192,7 +233,7 @@ async function updateCase(req, res) {
     const { rows } = await client.query(
       `UPDATE gallery_cases SET ${sets.join(', ')}
        WHERE id = $${n}
-       RETURNING id, title, description, category, before_image_url, after_image_url, sort_order, created_at`,
+       RETURNING id, title, description, category, patient_user_id, before_image_url, after_image_url, sort_order, created_at`,
       values
     );
     await client.query('COMMIT');

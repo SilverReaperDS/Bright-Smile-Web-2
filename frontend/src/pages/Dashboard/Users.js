@@ -19,6 +19,7 @@ import {
   Select,
   MenuItem,
   CircularProgress,
+  Chip,
 } from '@mui/material';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
@@ -29,6 +30,7 @@ import {
   patchAdminStaff,
   deleteAdminStaff,
   patchAdminUserRole,
+  patchAdminUserActive,
 } from '../../services/api';
 import PasswordField from '../../components/PasswordField';
 import dashStyles from './dashboard.styles';
@@ -148,6 +150,22 @@ export default function Users() {
       setError(err.message);
     }
   };
+  const handleToggleActive = async (user) => {
+    const nextStatus = !user.isActive;
+    const action = nextStatus ? 'activate' : 'deactivate';
+
+    if (!window.confirm(`Are you sure you want to ${action} "${user.username}"?`)) {
+      return;
+    }
+
+    setError('');
+    try {
+      await patchAdminUserActive(user.id, nextStatus);
+      await load();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
   if (loading) {
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 3 }}>
@@ -241,13 +259,14 @@ export default function Users() {
               <TableCell sx={dashStyles.tableHeaderCell}>Username</TableCell>
               <TableCell sx={dashStyles.tableHeaderCell}>Email</TableCell>
               <TableCell sx={dashStyles.tableHeaderCell}>Phone</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Status</TableCell>
               <TableCell align="right" sx={dashStyles.tableHeaderCell}>Manage</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {staff.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5}>
+                <TableCell colSpan={6}>
                   <Typography color="text.secondary">No staff yet. Add team members above for appointment assignment.</Typography>
                 </TableCell>
               </TableRow>
@@ -258,6 +277,13 @@ export default function Users() {
                 <TableCell>{s.username}</TableCell>
                 <TableCell>{s.email}</TableCell>
                 <TableCell>{s.phone || '—'}</TableCell>
+                <TableCell>
+                  <Chip
+                    size="small"
+                    label={s.isActive ? 'Active' : 'Deactivated'}
+                    color={s.isActive ? 'success' : 'default'}
+                  />
+                </TableCell>
                 <TableCell align="right">
                   <IconButton aria-label="Edit" size="small" onClick={() => openEdit(s)} color="primary">
                     <EditOutlinedIcon />
@@ -285,12 +311,14 @@ export default function Users() {
               <TableCell sx={dashStyles.tableHeaderCell}>Email</TableCell>
               <TableCell sx={dashStyles.tableHeaderCell}>Phone</TableCell>
               <TableCell sx={dashStyles.tableHeaderCell}>Role</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Status</TableCell>
+              <TableCell sx={dashStyles.tableHeaderCell}>Action</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {allUsers.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5}>
+                <TableCell colSpan={7}>
                   <Typography color="text.secondary">No users.</Typography>
                 </TableCell>
               </TableRow>
@@ -306,11 +334,28 @@ export default function Users() {
                     size="small"
                     value={u.role}
                     onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                  />
+                  >
                     <MenuItem value="patient">patient</MenuItem>
                     <MenuItem value="staff">staff</MenuItem>
                     <MenuItem value="admin">admin</MenuItem>
                   </Select>
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    size="small"
+                    label={u.isActive ? 'Active' : 'Deactivated'}
+                    color={u.isActive ? 'success' : 'default'}
+                  />
+                </TableCell>
+                <TableCell>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color={u.isActive ? 'error' : 'success'}
+                    onClick={() => handleToggleActive(u)}
+                  >
+                    {u.isActive ? 'Deactivate' : 'Activate'}
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}

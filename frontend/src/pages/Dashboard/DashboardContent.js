@@ -6,6 +6,8 @@ import Testimonials from './Testimonials';
 import Gallery from './Gallery';
 import Appointments from './Appointments';
 import Users from './Users';
+import ActivityLogs from './ActivityLogs';
+import NotFound from '../NotFound/NotFound';
 
 export default function DashboardContent() {
   return (
@@ -16,6 +18,16 @@ export default function DashboardContent() {
       <Route path="gallery" element={<Gallery />} />
       <Route path="appointments" element={<Appointments />} />
       <Route path="users" element={<Users />} />
+      <Route path="activity-logs" element={<ActivityLogs />} />
+      <Route
+        path="*"
+        element={
+          <NotFound
+            title="Dashboard page not found"
+            message="That dashboard section does not exist."
+          />
+        }
+      />
     </Routes>
   );
 }

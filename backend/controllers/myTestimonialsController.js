@@ -1,5 +1,17 @@
 const { pool } = require('../db');
 
+async function logUserActivity(userId, action, details = '') {
+  try {
+    await pool.query(
+      `INSERT INTO user_activity_logs (actor_id, user_id, action, details)
+       VALUES ($1, $2, $3, $4)`,
+      [userId || null, userId || null, action, details]
+    );
+  } catch (err) {
+    console.error('Failed to log user activity:', err.message);
+  }
+}
+
 function rowToDto(row) {
   return {
     id: row.id,
@@ -77,6 +89,11 @@ async function createMyTestimonial(req, res) {
        VALUES ($1, $2, $3, $4, 'pending')
        RETURNING id, user_id, author_name, text, rating, status, created_at`,
       [req.user.id, authorName, text, ratingNum]
+    );
+    await logUserActivity(
+      req.user.id,
+      'testimonial_submitted',
+      `Submitted testimonial with rating ${ratingNum}`
     );
     res.status(201).json(rowToDto(rows[0]));
   } catch (err) {

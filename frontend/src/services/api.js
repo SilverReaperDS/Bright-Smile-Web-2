@@ -1,4 +1,5 @@
 // src/services/api.js
+import { io } from "socket.io-client";
 
 const DATA_BASE = "/data";
 
@@ -156,6 +157,43 @@ function authHeaders() {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
+}
+
+let realtimeSocket = null;
+
+export function initializeRealtimeSocket() {
+  const token = localStorage.getItem("authToken");
+  if (!token) return null;
+  if (realtimeSocket && realtimeSocket.connected) return realtimeSocket;
+
+  const socket = io(getApiBase() || window.location.origin, {
+    transports: ["websocket", "polling"],
+    auth: {
+      token: `Bearer ${token}`,
+    },
+  });
+  realtimeSocket = socket;
+  return realtimeSocket;
+}
+
+export function getRealtimeSocket() {
+  return realtimeSocket;
+}
+
+export function disconnectRealtimeSocket() {
+  if (!realtimeSocket) return;
+  realtimeSocket.disconnect();
+  realtimeSocket = null;
+}
+
+export function realtimeJoinThread(threadId) {
+  if (!realtimeSocket || !threadId) return;
+  realtimeSocket.emit("thread:join", threadId);
+}
+
+export function realtimeLeaveThread(threadId) {
+  if (!realtimeSocket || !threadId) return;
+  realtimeSocket.emit("thread:leave", threadId);
 }
 
 export async function postRegister({ username, email, password, phone }) {
@@ -593,6 +631,28 @@ export async function patchAdminUserRole(id, body) {
   if (!res.ok) throw new Error(await parseErrorResponse(res));
   return res.json();
 }
+
+export async function patchAdminUserActive(id, isActive) {
+  const res = await fetch(
+    `${getApiBase()}/api/admin/users/${encodeURIComponent(id)}/active`,
+    {
+      method: "PATCH",
+      headers: authHeaders(),
+      body: JSON.stringify({ isActive }),
+    },
+  );
+  if (!res.ok) throw new Error(await parseErrorResponse(res));
+  return res.json();
+}
+
+export async function fetchAdminUserActivityLogs() {
+  const res = await fetch(`${getApiBase()}/api/admin/users/logs`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(await parseErrorResponse(res));
+  return res.json();
+}
+
 export async function downloadAppointmentsCsv() {
   const token = localStorage.getItem("authToken");
   const res = await fetch(`${getApiBase()}/api/appointments/export/csv`, {
