@@ -653,19 +653,6 @@ export async function patchAdminUserActive(id, isActive) {
   return res.json();
 }
 
-export async function patchAdminUserActive(id, isActive) {
-  const res = await fetch(
-    `${getApiBase()}/api/admin/users/${encodeURIComponent(id)}/active`,
-    {
-      method: "PATCH",
-      headers: authHeaders(),
-      body: JSON.stringify({ isActive }),
-    },
-  );
-  if (!res.ok) throw new Error(await parseErrorResponse(res));
-  return res.json();
-}
-
 export async function fetchAdminUserActivityLogs() {
   const res = await fetch(`${getApiBase()}/api/admin/users/logs`, {
     headers: authHeaders(),
