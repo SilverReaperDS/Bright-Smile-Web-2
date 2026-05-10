@@ -102,9 +102,6 @@ const styles = {
     '&:hover .logo-dot': {
       transform: 'scale(1.15)',
     },
-    '& .logo-dot': {
-      transition: 'transform 0.25s ease',
-    },
   },
   navLinks: {
     flex: 1,
