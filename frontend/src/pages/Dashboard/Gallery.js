@@ -19,7 +19,6 @@ import {
   Stack,
   Chip,
   CircularProgress,
-  MenuItem,
 } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -29,11 +28,9 @@ import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
 import {
   fetchAdminGallery,
   postAdminGalleryCase,
-  postAdminGalleryCaseFromUrls,
   deleteAdminGalleryItem,
   patchAdminGalleryCase,
   patchAdminGalleryReorder,
-  fetchAdminUsers,
 } from '../../services/api';
 import dashStyles from './dashboard.styles';
 
@@ -87,37 +84,22 @@ export default function Gallery() {
   const [category, setCategory] = useState('');
   const [beforeFile, setBeforeFile] = useState(null);
   const [afterFile, setAfterFile] = useState(null);
-  const [urlBefore, setUrlBefore] = useState('');
-  const [urlAfter, setUrlAfter] = useState('');
   const [saving, setSaving] = useState(false);
-  const [patients, setPatients] = useState([]);
-  const [patientUserId, setPatientUserId] = useState('');
   const [fileKey, setFileKey] = useState(0);
   const [editOpen, setEditOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editCategory, setEditCategory] = useState('');
-  const [editBeforeUrl, setEditBeforeUrl] = useState('');
-  const [editAfterUrl, setEditAfterUrl] = useState('');
   const [editBeforeFile, setEditBeforeFile] = useState(null);
   const [editAfterFile, setEditAfterFile] = useState(null);
   const [editFileKey, setEditFileKey] = useState(0);
-  const [editPatientUserId, setEditPatientUserId] = useState('');
-
-  const patientNameById = (id) => {
-    if (!id) return '—';
-    const p = patients.find((u) => u.id === id);
-    return p ? p.username : 'Unknown patient';
-  };
 
   const load = useCallback(async () => {
     setError('');
     try {
       const data = await fetchAdminGallery();
-      const users = await fetchAdminUsers();
       setCases(Array.isArray(data) ? data : []);
-      setPatients(Array.isArray(users) ? users.filter((u) => u.role === 'patient') : []);
     } catch (e) {
       setError(e.message || 'Failed to load');
     } finally {
@@ -151,62 +133,31 @@ export default function Gallery() {
   const handleAddPair = async (e) => {
     e.preventDefault();
     setError('');
-    const uB = urlBefore.trim();
-    const uA = urlAfter.trim();
-    if (beforeFile && afterFile) {
-      setSaving(true);
-      try {
-        const fd = new FormData();
-        if (title.trim()) fd.append('title', title.trim());
-        if (description.trim()) fd.append('description', description.trim());
-        if (category.trim()) fd.append('category', category.trim());
-        if (patientUserId) fd.append('patientUserId', patientUserId);
-        fd.append('beforeImage', beforeFile);
-        fd.append('afterImage', afterFile);
-        await postAdminGalleryCase(fd);
-        setTitle('');
-        setDescription('');
-        setCategory('');
-        setBeforeFile(null);
-        setAfterFile(null);
-        setPatientUserId('');
-        setUrlBefore('');
-        setUrlAfter('');
-        setFileKey((k) => k + 1);
-        await load();
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setSaving(false);
-      }
+    if (!beforeFile || !afterFile) {
+      setError('Choose both a before image and an after image.');
       return;
     }
-    if (uB && uA) {
-      setSaving(true);
-      try {
-        await postAdminGalleryCaseFromUrls({
-          beforeImageUrl: uB,
-          afterImageUrl: uA,
-          title: title.trim() || undefined,
-          description: description.trim() || undefined,
-          category: category.trim() || undefined,
-          patientUserId: patientUserId || undefined,
-        });
-        setTitle('');
-        setDescription('');
-        setCategory('');
-        setPatientUserId('');
-        setUrlBefore('');
-        setUrlAfter('');
-        await load();
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setSaving(false);
-      }
-      return;
+    setSaving(true);
+    try {
+      const fd = new FormData();
+      if (title.trim()) fd.append('title', title.trim());
+      if (description.trim()) fd.append('description', description.trim());
+      if (category.trim()) fd.append('category', category.trim());
+      fd.append('beforeImage', beforeFile);
+      fd.append('afterImage', afterFile);
+      await postAdminGalleryCase(fd);
+      setTitle('');
+      setDescription('');
+      setCategory('');
+      setBeforeFile(null);
+      setAfterFile(null);
+      setFileKey((k) => k + 1);
+      await load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
     }
-    setError('Add exactly one pair: either two image files (before + after) or both image URLs.');
   };
 
   const remove = async (id) => {
@@ -224,9 +175,6 @@ export default function Gallery() {
     setEditTitle(row.title || '');
     setEditDescription(row.description || '');
     setEditCategory(row.category || '');
-    setEditBeforeUrl(row.beforeImageUrl || '');
-    setEditAfterUrl(row.afterImageUrl || '');
-    setEditPatientUserId(row.patientUserId || '');
     setEditBeforeFile(null);
     setEditAfterFile(null);
     setEditFileKey((k) => k + 1);
@@ -243,20 +191,14 @@ export default function Gallery() {
           title: editTitle.trim() || null,
           description: editDescription.trim() || null,
           category: editCategory.trim() || null,
-          patientUserId: editPatientUserId || null,
-          beforeImageUrl: editBeforeUrl.trim(),
-          afterImageUrl: editAfterUrl.trim(),
         });
       } else {
         const fd = new FormData();
         fd.append('title', editTitle.trim());
         fd.append('description', editDescription.trim());
         fd.append('category', editCategory.trim());
-        fd.append('patientUserId', editPatientUserId);
         if (editBeforeFile) fd.append('beforeImage', editBeforeFile);
-        else fd.append('beforeImageUrl', editBeforeUrl.trim() || editing.beforeImageUrl || '');
         if (editAfterFile) fd.append('afterImage', editAfterFile);
-        else fd.append('afterImageUrl', editAfterUrl.trim() || editing.afterImageUrl || '');
         await patchAdminGalleryCase(editing.id, fd);
       }
       setEditOpen(false);
@@ -269,7 +211,7 @@ export default function Gallery() {
     }
   };
 
-  const canSubmitPair = (beforeFile && afterFile) || (urlBefore.trim() && urlAfter.trim());
+  const canSubmitPair = Boolean(beforeFile && afterFile);
 
   if (loading && cases.length === 0) {
     return (
@@ -288,8 +230,8 @@ export default function Gallery() {
             Smile Gallery
           </Typography>
           <Typography sx={dashStyles.pageSubtitle}>
-            Each entry is one case: exactly two images (before and after). Upload from your computer or paste two URLs.
-            Reorder cases with the arrows. The public page shows before and after side by side.
+            Each entry is one case: exactly two images (before and after), uploaded from your computer. Reorder cases
+            with the arrows. The public page shows before and after side by side.
           </Typography>
         </Box>
       </Box>
@@ -319,23 +261,6 @@ export default function Gallery() {
               onChange={(e) => setAfterFile(e.target.files?.[0] || null)}
             />
           </Stack>
-          <Typography variant="caption" color="text.secondary">
-            Or paste two URLs (leave file picks empty if using URLs):
-          </Typography>
-          <TextField
-            size="small"
-            label="Before image URL"
-            value={urlBefore}
-            onChange={(e) => setUrlBefore(e.target.value)}
-            fullWidth
-          />
-          <TextField
-            size="small"
-            label="After image URL"
-            value={urlAfter}
-            onChange={(e) => setUrlAfter(e.target.value)}
-            fullWidth
-          />
           <TextField label="Title (optional)" value={title} onChange={(e) => setTitle(e.target.value)} fullWidth />
           <TextField
             label="Description (optional)"
@@ -346,21 +271,6 @@ export default function Gallery() {
             rows={2}
           />
           <TextField label="Category (optional)" value={category} onChange={(e) => setCategory(e.target.value)} fullWidth />
-          <TextField
-            select
-            label="Patient (optional)"
-            value={patientUserId}
-            onChange={(e) => setPatientUserId(e.target.value)}
-            fullWidth
-            helperText="Attach this smile case to a specific patient"
-          >
-            <MenuItem value="">Not linked</MenuItem>
-            {patients.map((p) => (
-              <MenuItem key={p.id} value={p.id}>
-                {p.username} ({p.email})
-              </MenuItem>
-            ))}
-          </TextField>
           <Box>
             <Button
               type="submit"
@@ -383,14 +293,13 @@ export default function Gallery() {
               <TableCell sx={dashStyles.tableHeaderCell}>After</TableCell>
               <TableCell sx={dashStyles.tableHeaderCell}>Title</TableCell>
               <TableCell sx={dashStyles.tableHeaderCell}>Category</TableCell>
-              <TableCell sx={dashStyles.tableHeaderCell}>Patient</TableCell>
               <TableCell align="right" sx={dashStyles.tableHeaderCell}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {cases.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7}>
+                <TableCell colSpan={6}>
                   <Typography color="text.secondary">No cases yet.</Typography>
                 </TableCell>
               </TableRow>
@@ -450,7 +359,6 @@ export default function Gallery() {
                 </TableCell>
                 <TableCell>{row.title || '—'}</TableCell>
                 <TableCell>{row.category || '—'}</TableCell>
-                <TableCell>{patientNameById(row.patientUserId)}</TableCell>
                 <TableCell align="right">
                   <IconButton aria-label="Edit" size="small" onClick={() => openEdit(row)}>
                     <EditOutlinedIcon fontSize="small" />
@@ -469,7 +377,7 @@ export default function Gallery() {
         <DialogTitle>Edit case</DialogTitle>
         <DialogContent>
           <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1, mb: 1 }}>
-            Replace images by choosing new files, or edit URLs below.
+            Change title, description, or category below. To replace photos, choose new image files (optional).
           </Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
             <FilePick
@@ -485,8 +393,6 @@ export default function Gallery() {
               onChange={(e) => setEditAfterFile(e.target.files?.[0] || null)}
             />
           </Stack>
-          <TextField margin="dense" label="Before image URL" fullWidth value={editBeforeUrl} onChange={(e) => setEditBeforeUrl(e.target.value)} />
-          <TextField margin="dense" label="After image URL" fullWidth value={editAfterUrl} onChange={(e) => setEditAfterUrl(e.target.value)} />
           <TextField margin="dense" label="Title" fullWidth value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
           <TextField
             margin="dense"
@@ -498,21 +404,6 @@ export default function Gallery() {
             onChange={(e) => setEditDescription(e.target.value)}
           />
           <TextField margin="dense" label="Category" fullWidth value={editCategory} onChange={(e) => setEditCategory(e.target.value)} />
-          <TextField
-            margin="dense"
-            select
-            label="Patient"
-            fullWidth
-            value={editPatientUserId}
-            onChange={(e) => setEditPatientUserId(e.target.value)}
-          >
-            <MenuItem value="">Not linked</MenuItem>
-            {patients.map((p) => (
-              <MenuItem key={p.id} value={p.id}>
-                {p.username} ({p.email})
-              </MenuItem>
-            ))}
-          </TextField>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditOpen(false)} disabled={saving}>
