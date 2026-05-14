@@ -1,0 +1,45 @@
+[
+    {
+        "id": 1,
+        "name": "Maya R.",
+        "rating": 5,
+        "text": "Excellent care and friendly staff.",
+        "date": "2025-06-12"
+    },
+    {
+        "id": 2,
+        "name": "Omar S.",
+        "rating": 5,
+        "text": "My implants changed my life.",
+        "date": "2025-08-03"
+    },
+    {
+        "id": 3,
+        "name": "Ahmad J.",
+        "rating": 5,
+        "text": "The best dental clinic I've ever visited.",
+        "date": "2025-11-24"
+    },
+    {
+        "id": 4,
+        "name": "Fuad F.",
+        "rating": 4,
+        "text": "Highly recommend to anyone needing dental implants.",
+        "date": "2025-01-17"
+    },
+    {
+        "id": 5,
+        "name": "Saeed A.",
+        "rating": 3,
+        "text": "I am very satisfied with my dental implants.",
+        "date": "2025-05-07"
+    },
+    {
+        "id": 6,
+        "name": "Laila K.",
+        "rating": 4,
+        "text": "Great service and friendly atmosphere.",
+        "date": "2025-09-15"
+    }
+
+]

@@ -1,0 +1,27 @@
+[
+    {
+        "id": 1,
+        "title": "Dental Implants",
+        "description": "Permanent tooth replacement.",
+        "thumbnail": "/assets/services/implant-thumb.jpg",
+        "link": "/implants"
+
+    },
+
+    {
+        "id": 2,
+        "title": "Invisalign",
+        "description": "Clear aligners for straightening teeth.",
+        "thumbnail": "/assets/services/invisalign-thumb.jpg",
+        "link": "/invisalign"
+
+    },
+
+    {
+        "id": 3,
+        "title": "Dental Cosmetics",
+        "description": "Enhance your smile with whitening, and more.",
+        "thumbnail": "/assets/services/cosmetic-thumb.jpg",
+        "link": "/cosmetic"
+    }
+]
