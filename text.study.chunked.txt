@@ -1,0 +1,500 @@
+START PROMPT (send first):
+
+You are an expert software architect.
+I will send project chunks.
+Your task:
+- extract architecture
+- identify modules/services
+- track relationships
+- infer request/data flow
+- build an internal system map
+
+Rules:
+- no long explanations
+- no summaries yet
+- no implementation details
+- respond ONLY with:
+"Processed."
+
+Wait for chunks.
+
+==================================================
+CHUNK 1/12
+==================================================
+<project name="Bright Smile Backend">
+<runtime>
+stack:
+- nodejs
+- express
+- postgresql (pg)
+- jwt
+- socket.io
+- swagger
+</runtime>
+
+<entrypoint file="server.js">
+responsibilities:
+- app bootstrap
+- middleware order
+- route mounting
+- auth endpoints (/register,/login,/me)
+- 404 + global error middleware
+- socket auth + room policy
+depends:
+- db.ensureSchema
+- middleware.auth
+- routes.*
+- swagger.spec
+- utils.realtime
+</entrypoint>
+
+<middleware-order>
+1: cors
+2: express.json
+3: static /uploads
+4: /api-docs swagger ui
+5: feature routes
+6: 404 handler
+7: global 500 handler
+</middleware-order>
+</project>
+
+==================================================
+CHUNK 2/12
+==================================================
+<module name="database" file="db.js">
+purpose:
+- pg pool creation
+- startup schema assurance
+config-strategy:
+- DATABASE_URL preferred
+- fallback: DB_HOST/DB_USER/DB_PASSWORD/DB_NAME
+core:
+- pool.on(error)
+- ensureSchema()
+
+tables-used:
+- users
+- appointments
+- messages
+- testimonials
+- gallery_items
+- gallery_cases
+- user_activity_logs
+
+schema-actions:
+- add missing columns/indexes
+- enforce message thread/read fields
+- enforce testimonials status check
+- create gallery_cases
+- migrate legacy gallery_items -> gallery_cases pairs
+
+relationships:
+- appointments.user_id -> users.id
+- appointments.assigned_staff_id -> users.id
+- messages.user_id -> users.id
+- testimonials.user_id -> users.id
+- gallery_cases.patient_user_id -> users.id
+- logs.actor_id/user_id -> users.id
+</module>
+
+==================================================
+CHUNK 3/12
+==================================================
+<module name="auth-middleware" file="middleware/auth.js">
+functions:
+- verifyToken
+- isAdmin
+- optionalAuth
+- isPatientOrStaff
+
+verifyToken-flow:
+- parse bearer token
+- jwt.verify
+- db lookup role + is_active
+- attach req.user
+
+authz:
+- isAdmin: role==admin
+- isPatientOrStaff: blocks admin from patient portal
+- optionalAuth: soft-attach req.optionalUserId for public-capable flows
+
+security-notes:
+- denies missing token
+- denies invalid token
+- denies deactivated account
+- role re-check from DB prevents stale role in token
+</module>
+
+==================================================
+CHUNK 4/12
+==================================================
+<module name="upload-middleware" file="middleware/galleryUpload.js">
+purpose:
+- handle gallery before/after image uploads
+library:
+- multer diskStorage
+storage:
+- /uploads/gallery
+constraints:
+- mimetype allowlist: jpeg/png/gif/webp
+- max size: 12MB
+- random UUID filename
+entrypoints:
+- runUploadPair
+- multipartPair
+</module>
+
+<module name="utils">
+<file name="validatePassword.js">
+rule:
+- min 8
+- at least one digit
+- at least one special char
+</file>
+
+<file name="validatePhone.js">
+normalize:
+- trim string
+validate:
+- required
+- >=7 digits (after stripping non-digits)
+</file>
+
+<file name="realtime.js">
+helpers:
+- toThreadRoom(threadId)
+- toUserRoom(userId)
+- emitMessageEvent(app,payload)
+events:
+- message:new (thread room)
+- message:new (user room)
+- thread:updated (broadcast)
+</file>
+</module>
+
+==================================================
+CHUNK 5/12
+==================================================
+<module name="routing-map">
+<group base="/auth-inline">
+routes:
+- POST /register
+- POST /login
+- GET /me
+</group>
+
+<group base="/api/dashboard">
+routes:
+- GET /overview (admin)
+</group>
+
+<group base="/api/messages">
+routes:
+- POST / (authenticated sender)
+- GET /threads/summary (admin)
+- GET /threads/:threadId (admin)
+- POST /threads/:threadId/reply (admin)
+- GET / (admin)
+- GET /:id (admin)
+- PUT /:id (admin)
+- DELETE /:id (admin)
+</group>
+
+<group base="/api/my">
+routes:
+- DELETE /account
+- GET /threads
+- GET /threads/:threadId/messages
+- POST /threads/:threadId/messages
+- GET /appointments
+- GET /testimonials
+- POST /testimonials
+- DELETE /testimonials/:id
+guard:
+- verifyToken
+- isPatientOrStaff
+</group>
+</module>
+
+==================================================
+CHUNK 6/12
+==================================================
+<module name="routing-map-continued">
+<group base="/api/appointments/book">
+routes:
+- POST / (verifyToken, non-admin flow)
+</group>
+
+<group base="/api/appointments">
+routes:
+- GET /export/csv (admin)
+- GET /staff (admin)
+- GET / (admin)
+- PATCH /:id (admin)
+- DELETE /:id (admin)
+</group>
+
+<group base="/api/gallery">
+routes:
+- GET / (public)
+- PATCH /reorder (admin)
+- POST / (admin + multipartPair)
+- PATCH /:id (admin + multipartPair)
+- DELETE /:id (admin)
+</group>
+
+<group base="/api/testimonials">
+routes:
+- GET / (public approved-only)
+</group>
+
+<group base="/api/admin/testimonials">
+routes:
+- GET /
+- PATCH /:id
+- DELETE /:id
+guard:
+- verifyToken
+- isAdmin
+</group>
+
+<group base="/api/admin/users">
+routes:
+- GET /staff
+- POST /staff
+- PATCH /staff/:id
+- DELETE /staff/:id
+- GET /logs
+- PATCH /:id/role
+- PATCH /:id/active
+- GET /
+guard:
+- verifyToken
+- isAdmin
+</group>
+</module>
+
+==================================================
+CHUNK 7/12
+==================================================
+<module name="appointments-controller" file="controllers/appointmentController.js">
+functions:
+- rowToAppointment
+- listAppointments
+- listStaffForAssignment
+- updateAppointment
+- deleteAppointment
+- exportAppointmentsCsv
+- listMyAppointments
+- createPatientBooking
+
+business-rules:
+- status allowlist for updates
+- assigned staff must exist and have role=staff
+- booking date required + valid + future
+- admin blocked from patient booking endpoint
+
+errors:
+- invalid uuid -> 400 (22P02)
+- missing fields -> 400
+- not found -> 404
+- db/unexpected -> 500
+</module>
+
+==================================================
+CHUNK 8/12
+==================================================
+<module name="messages-admin" file="controllers/messageController.js">
+functions:
+- getMessages
+- getThreadsSummaryAdmin
+- getThreadMessagesAdmin
+- adminReplyToThread
+- getMessage
+- createMessage
+- updateMessage
+- deleteMessage
+
+message-shape:
+- via rowToMessage/messageSelect (shared)
+
+thread-model:
+- thread_id groups conversation
+- sender_role: patient|admin
+- read flags:
+  - read_by_admin
+  - read_by_patient
+  - legacy read synced
+
+business-rules:
+- sender must provide message text
+- sender account must exist
+- sender must have valid phone
+- reuse latest thread_id for user else create UUID
+- admin thread read marks patient messages read_by_admin=true
+- admin reply inserts sender_role=admin, read_by_patient=false
+
+realtime:
+- emitMessageEvent on message creation/reply
+</module>
+
+==================================================
+CHUNK 9/12
+==================================================
+<module name="my-portal-messaging" file="controllers/myPortalController.js">
+functions:
+- assertThreadOwnedByUser
+- getMyThreads
+- getMyThreadMessages
+- postMyThreadReply
+- deleteMyAccount
+
+ownership-enforcement:
+- user can access only threads where (thread_id,user_id) exists
+
+read-flow:
+- opening own thread marks admin messages read_by_patient=true
+
+reply-flow:
+- validate text
+- verify ownership
+- inherit/fallback contact identity from first message or users table
+- insert patient message
+- emit realtime event
+
+account-delete:
+- transaction
+- allows role in (patient,staff) only
+</module>
+
+==================================================
+CHUNK 10/12
+==================================================
+<module name="gallery" file="controllers/galleryController.js">
+functions:
+- fileUrlFromFilename
+- rowToCase
+- tryUnlinkStoredUrl
+- getGallery
+- readPairFromFiles
+- createCase
+- updateCase
+- reorderGallery
+- deleteCase
+
+key-rules:
+- case requires before+after image
+- accepts multipart upload OR direct URLs
+- patient_user_id optional, if provided must be role=patient
+- reorder requires non-empty orderedIds array
+
+safety:
+- delete files only under uploads root (path traversal guard)
+- rollback + cleanup on failure
+- in update: commit DB then remove replaced files
+</module>
+
+==================================================
+CHUNK 11/12
+==================================================
+<module name="testimonials">
+<file name="controllers/testimonialsPublicController.js">
+route:
+- GET /api/testimonials
+rule:
+- return status='approved' only
+</file>
+
+<file name="controllers/testimonialsAdminController.js">
+functions:
+- listTestimonials(filter status/rating)
+- updateTestimonial(dynamic fields)
+- deleteTestimonial
+statuses:
+- pending
+- approved
+- rejected
+</file>
+
+<file name="controllers/myTestimonialsController.js">
+functions:
+- getMyTestimonials
+- createMyTestimonial
+- deleteMyTestimonial
+rules:
+- text required, len 10..2000
+- rating 1..5
+- only one pending/approved active submission per user
+- fallback authorName from users.username
+- logs activity testimonial_submitted
+</file>
+</module>
+
+==================================================
+CHUNK 12/12
+==================================================
+<module name="users-admin" file="controllers/usersAdminController.js">
+functions:
+- listUsers
+- listStaff
+- createStaff
+- updateStaff
+- deleteStaff
+- updateUserRole
+- toggleUserActive
+- listUserActivityLogs
+- logActivity
+
+rules:
+- create/update staff validates password + phone
+- duplicate username/email guarded
+- cannot delete own account from staff endpoint
+- cannot remove own admin role
+- cannot deactivate own account
+- role allowlist: admin|staff|patient
+</module>
+
+<module name="dashboard" file="controllers/dashboardController.js">
+function:
+- getOverviewStats
+strategy:
+- Promise.all parallel aggregate queries
+returns:
+- totals (users, appointments, pending testimonials, unread messages)
+- recent appointments
+- recent unread threads
+- pending testimonials
+</module>
+
+<module name="docs-and-seeds">
+<file name="swagger.js">
+purpose:
+- OpenAPI definition served at /api-docs
+note:
+- doc drift exists vs runtime in some schemas/enums/id types
+</file>
+<file name="scripts/seedAdmin.js">
+purpose:
+- create/reset admin user
+</file>
+<file name="scripts/seedStaff.js">
+purpose:
+- create/reset staff user
+</file>
+</module>
+
+FINALIZE PROMPT (send last):
+
+FINALIZE.
+
+Generate:
+1. High-level architecture map
+2. Module dependency graph
+3. Request lifecycle
+4. Auth/data flow
+5. Folder responsibility map
+6. Core abstractions
+7. Concise onboarding guide
+
+Output concise markdown.
