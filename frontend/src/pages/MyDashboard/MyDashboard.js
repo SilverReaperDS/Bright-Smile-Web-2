@@ -50,6 +50,7 @@ import {
   fetchMyTestimonials,
   createMyTestimonial,
   deleteMyTestimonial,
+  getMe,
   initializeRealtimeSocket,
   disconnectRealtimeSocket,
   realtimeJoinThread,
@@ -795,9 +796,39 @@ function AccountPanel() {
 }
 
 export default function MyDashboard() {
+  const navigate = useNavigate();
   const [tab, setTab] = useState(0);
+  const [role, setRole] = useState(null);
   const username =
     (typeof window !== 'undefined' && localStorage.getItem('username')) || '';
+
+  useEffect(() => {
+    getMe()
+      .then((data) => {
+        if (data.role === 'admin') {
+          navigate('/dashboard', { replace: true });
+          return;
+        }
+        setRole(data.role);
+      })
+      .catch(() => {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('username');
+        navigate('/login', { replace: true });
+      });
+  }, [navigate]);
+
+  const isPatient = role === 'patient';
+
+  if (role === null) {
+    return (
+      <Box sx={styles.page}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '40vh' }}>
+          <CircularProgress />
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={styles.page}>
@@ -809,8 +840,9 @@ export default function MyDashboard() {
           {username ? `Welcome back, ${username}` : 'My dashboard'}
         </Typography>
         <Typography sx={styles.subheading}>
-          Your conversations with the clinic, upcoming appointments, testimonials,
-          and account settings — all in one place.
+          {isPatient
+            ? 'Your conversations with the clinic, upcoming appointments, testimonials, and account settings — all in one place.'
+            : 'Your conversations with the clinic, upcoming appointments, and account settings — all in one place.'}
         </Typography>
 
         <Box sx={styles.tabsWrap}>
@@ -823,15 +855,17 @@ export default function MyDashboard() {
           >
             <Tab icon={<ForumOutlinedIcon />} iconPosition="start" label="Messages" />
             <Tab icon={<EventAvailableOutlinedIcon />} iconPosition="start" label="Appointments" />
-            <Tab icon={<RateReviewOutlinedIcon />} iconPosition="start" label="Testimonials" />
+            {isPatient && (
+              <Tab icon={<RateReviewOutlinedIcon />} iconPosition="start" label="Testimonials" />
+            )}
             <Tab icon={<ManageAccountsOutlinedIcon />} iconPosition="start" label="Account" />
           </Tabs>
         </Box>
 
         {tab === 0 && <MessagesPanel />}
         {tab === 1 && <AppointmentsPanel />}
-        {tab === 2 && <TestimonialsPanel />}
-        {tab === 3 && <AccountPanel />}
+        {isPatient && tab === 2 && <TestimonialsPanel />}
+        {tab === (isPatient ? 3 : 2) && <AccountPanel />}
       </Box>
     </Box>
   );

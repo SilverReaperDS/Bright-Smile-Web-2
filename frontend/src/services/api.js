@@ -470,17 +470,6 @@ export async function postAdminGalleryCase(formData) {
   return res.json();
 }
 
-/** JSON: beforeImageUrl + afterImageUrl (optional helper for scripts). */
-export async function postAdminGalleryCaseFromUrls(body) {
-  const res = await fetch(`${getApiBase()}/api/gallery`, {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(await parseErrorResponse(res));
-  return res.json();
-}
-
 export async function deleteAdminGalleryItem(id) {
   const res = await fetch(
     `${getApiBase()}/api/gallery/${encodeURIComponent(id)}`,
@@ -493,7 +482,7 @@ export async function deleteAdminGalleryItem(id) {
   return res.json();
 }
 
-/** JSON body or FormData (metadata + optional beforeImage/afterImage files). */
+/** JSON (title, description, category) or FormData (same fields + optional beforeImage/afterImage files). */
 export async function patchAdminGalleryCase(id, bodyOrForm) {
   const token = localStorage.getItem("authToken");
   const isForm =
