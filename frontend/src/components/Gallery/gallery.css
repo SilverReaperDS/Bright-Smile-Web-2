@@ -23,9 +23,10 @@
 /* ---------- Section wrapper ---------- */
 .gallery-section {
   position: relative;
-  padding: clamp(2rem, 4vw, 4rem) clamp(1rem, 3vw, 2rem) clamp(3rem, 6vw, 5rem);
-  max-width: 1200px;
+  width: 100%;
+  max-width: none;
   margin: 0 auto;
+  padding: clamp(2rem, 4vw, 4rem) 0 clamp(3rem, 6vw, 5rem);
   text-align: center;
 }
 
@@ -72,23 +73,13 @@
   grid-template-columns: 1fr;
   gap: clamp(1.75rem, 3vw, 2.5rem);
   align-items: stretch;
-}
-
-@media (min-width: 900px) {
-  .gallery-cases {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  /* Single-image cases stay full-width for impact */
-  .gallery-cases > .gallery-case:has(.gallery-case-pair--one) {
-    grid-column: 1 / -1;
-    max-width: 780px;
-    justify-self: center;
-  }
+  width: 100%;
 }
 
 /* ---------- Case card ---------- */
 .gallery-case {
   position: relative;
+  width: 100%;
   display: flex;
   flex-direction: column;
   background: var(--gallery-surface);
@@ -186,7 +177,7 @@
 .gallery-case-image-wrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 420 / 180;
   border-radius: var(--gallery-radius);
   overflow: hidden;
   background: linear-gradient(135deg, #f0f7f7, #e2f3f2);
@@ -228,40 +219,6 @@
 
 .gallery-case:hover .gallery-case-panel:first-child .gallery-case-image-wrap img {
   filter: saturate(1);
-}
-
-/* Divider arrow between before/after (desktop only) */
-@media (min-width: 561px) {
-  .gallery-case-pair--two {
-    position: relative;
-  }
-  .gallery-case-pair--two::before {
-    content: "→";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 44px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--gallery-surface);
-    border: 2px solid var(--gallery-teal);
-    color: var(--gallery-teal);
-    border-radius: 50%;
-    font-size: 1.25rem;
-    font-weight: 700;
-    z-index: 3;
-    box-shadow: 0 4px 12px rgba(13, 177, 173, 0.25);
-    pointer-events: none;
-    transition: transform 0.4s var(--gallery-ease), background 0.3s ease, color 0.3s ease;
-  }
-  .gallery-case:hover .gallery-case-pair--two::before {
-    transform: translate(-50%, -50%) scale(1.1) rotate(-5deg);
-    background: var(--gallery-teal);
-    color: #fff;
-  }
 }
 
 /* ---------- Meta block ---------- */
@@ -317,7 +274,6 @@
   .gallery-case,
   .gallery-case-image-wrap img,
   .gallery-case-image-wrap::after,
-  .gallery-case-pair--two::before,
   .gallery-case::after {
     transition: none !important;
   }
